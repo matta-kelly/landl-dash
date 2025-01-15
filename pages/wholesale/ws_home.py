@@ -1,14 +1,10 @@
 # Template for "Coming Soon" Pages
 
-from dash import html
+from dash import html, dcc
 
-layout = html.Div(
-    className="coming-soon-container",
-    children=[
-        html.H1("Coming Soon", className="coming-soon-title"),
-        html.P(
-            "This page is under construction. Check back soon for updates!",
-            className="coming-soon-description",
-        ),
-    ],
+ws_home = html.Div(
+    [
+        html.H1("Welcome to the Home Page"),
+        dcc.Link("Go to Wholesale", href="/wholesale"),
+    ]
 )

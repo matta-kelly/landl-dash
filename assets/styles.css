@@ -46,20 +46,3 @@ body {
     margin-bottom: 15px;
 }
 
-/* Adjust sidebar width */
-.sidebar {
-    background-color: #f8f9fa;
-    height: 100vh;
-    padding: 15px;
-    position: fixed;
-    left: 0;
-    top: 0;
-    overflow-y: auto;
-    width: 250px;
-}
-
-/* Ensure main content shifts to accommodate sidebar */
-.main-content {
-    margin-left: 250px;
-    padding: 20px;
-}

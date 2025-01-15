@@ -1,132 +1,88 @@
+import logging
 import dash
-from dash import dcc, html, Input, Output
-from pages import home
-from pages.wholesale.ws_home import layout as ws_home_layout
-from pages.wholesale.ws_shipping_fufillment import layout as ws_shipping_layout
-from pages.wholesale.ws_rep_view import layout as ws_rep_view_layout
-from pages.wholesale.ws_customer_eval import layout as ws_customer_layout
-from pages.wholesale.surf_expo.se_home import layout as se_home_layout
-from pages.wholesale.surf_expo.se_shipping_fufillment import layout as se_shipping_layout
-from pages.wholesale.surf_expo.se_rep_view import layout as se_rep_view_layout
-from pages.wholesale.surf_expo.se_customer_eval import layout as se_customer_layout
-from pages.ecom.ec_home import layout as ec_home_layout
+from dash import Dash, dcc, html, Output, Input
+import dash_mantine_components as dmc
+from theme import theme
+from components.theme_toggle import theme_toggle
+from components import layout
+from pages.home import home
+from pages.wholesale.ws_home import ws_home
+from pages.wholesale.ws_shipping_fufillment import ws_shipping_fufillment
+from pages.wholesale.ws_rep_view import ws_rep_view
+import os
 
-# Initialize the Dash app
-app = dash.Dash(__name__, external_stylesheets=["/assets/styles.css"], suppress_callback_exceptions=True)
-app.title = "Sales Order Dashboard"
+# Disable file watching for Dash
+os.environ["DASH_NO_DEV_TOOLS"] = "1"
 
-# Layout of the app
-app.layout = html.Div(
-    children=[
-        html.H1("Sales Order Dashboard", className="header-title"),
-        dcc.Tabs(
-            id="main-tabs",
-            value="home",
-            children=[
-                dcc.Tab(label="Home", value="home"),
-                dcc.Tab(label="Wholesale", value="wholesale"),
-                dcc.Tab(label="Ecom", value="ecom"),
-            ],
-        ),
-        html.Div(id="main-tabs-content"),
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# Initialize the Dash app with external React libraries
+app = dash.Dash(
+    __name__,
+    external_scripts=[
+        "https://unpkg.com/react@18/umd/react.development.js",
+        "https://unpkg.com/react-dom@18/umd/react-dom.development.js"
     ],
-    className="container",
+    suppress_callback_exceptions=True,
+    update_title="Loading...",
+    title="Wholesale Dashboard",
 )
 
-# Callback to manage the main tabs
+# Log app initialization
+logger.debug("Dash app initialized successfully.")
+
+# Wrap the layout in MantineProvider
+app.layout = dmc.MantineProvider(
+    id="mantine-provider",
+    theme=theme,
+    forceColorScheme="light",
+    children=[
+        dcc.Location(id="url", refresh=False),  # Tracks current URL
+        dmc.Text(id="debug-pathname"),  # Display current pathname for debugging
+        layout.layout,  # Use the layout object from components/layout.py
+    ],
+)
+
+# Log the application layout setup
+logger.debug("Application layout set.")
+
+
+# Callback for dynamic page rendering
 @app.callback(
-    Output("main-tabs-content", "children"),
-    Input("main-tabs", "value"),
+    Output("page-content", "children"),  # Update the page-content container
+    [Input("url", "pathname")],         # Listen to changes in the URL pathname
 )
-def render_main_tabs(selected_tab):
-    if selected_tab == "home":
-        return home.layout
-    elif selected_tab == "wholesale":
-        return html.Div(
-            children=[
-                dcc.Tabs(
-                    id="wholesale-tabs",
-                    value="ws-home",
-                    children=[
-                        dcc.Tab(label="Home", value="ws-home"),
-                        dcc.Tab(label="Shipping / Fulfillment", value="ws-shipping"),
-                        dcc.Tab(label="Rep View", value="ws-rep"),
-                        dcc.Tab(label="Customer Evaluation", value="ws-customer"),
-                        dcc.Tab(label="Surf Expo", value="surf-expo"),
-                    ],
-                ),
-                html.Div(id="wholesale-tabs-content"),
-            ]
-        )
-    elif selected_tab == "ecom":
-        return html.Div(
-            children=[
-                dcc.Tabs(
-                    id="ecom-tabs",
-                    value="ec-home",
-                    children=[
-                        dcc.Tab(label="Home", value="ec-home"),
-                    ],
-                ),
-                html.Div(id="ecom-tabs-content"),
-            ]
-        )
+def render_page_content(pathname):
+    return display_page(pathname)
 
-# Callback to manage the wholesale tabs
-@app.callback(
-    Output("wholesale-tabs-content", "children"),
-    Input("wholesale-tabs", "value"),
-)
-def render_wholesale_tabs(selected_tab):
-    if selected_tab == "ws-home":
-        return ws_home_layout
-    elif selected_tab == "ws-shipping":
-        return ws_shipping_layout
-    elif selected_tab == "ws-rep":
-        return ws_rep_view_layout
-    elif selected_tab == "ws-customer":
-        return ws_customer_layout
-    elif selected_tab == "surf-expo":
-        return html.Div(
-            children=[
-                dcc.Tabs(
-                    id="surf-expo-tabs",
-                    value="se-home",
-                    children=[
-                        dcc.Tab(label="Home", value="se-home"),
-                        dcc.Tab(label="Shipping / Fulfillment", value="se-shipping"),
-                        dcc.Tab(label="Rep View", value="se-rep"),
-                        dcc.Tab(label="Customer Evaluation", value="se-customer"),
-                    ],
-                ),
-                html.Div(id="surf-expo-tabs-content"),
-            ]
-        )
+def display_page(pathname):
+    try:
+        logger.info(f"Routing triggered with pathname: {pathname}")
+        if not pathname or pathname == "/":
+            logger.debug("Rendering home page.")
+            return home
+        elif pathname == "/wholesale":
+            logger.debug("Rendering wholesale home page.")
+            return ws_home
+        elif pathname == "/wholesale/shipping":
+            logger.debug("Rendering wholesale shipping page.")
+            return ws_shipping_fufillment
+        elif pathname == "/wholesale/rep-view":
+            logger.debug("Rendering wholesale rep view page.")
+            return ws_rep_view
+        else:
+            logger.debug("404: Page not found.")
+            return html.Div(
+                dmc.Text("404: Page not found", ta="center", c="red", size="xl"),
+                style={"textAlign": "center", "marginTop": "50px"},
+            )
+    except Exception as e:
+        logger.error(f"Error in display_page callback: {e}")
+        return html.Div("An error occurred.")
 
-# Callback to manage the Surf Expo tabs
-@app.callback(
-    Output("surf-expo-tabs-content", "children"),
-    Input("surf-expo-tabs", "value"),
-)
-def render_surf_expo_tabs(selected_tab):
-    if selected_tab == "se-home":
-        return se_home_layout
-    elif selected_tab == "se-shipping":
-        return se_shipping_layout
-    elif selected_tab == "se-rep":
-        return se_rep_view_layout
-    elif selected_tab == "se-customer":
-        return se_customer_layout
-
-# Callback to manage the ecom tabs
-@app.callback(
-    Output("ecom-tabs-content", "children"),
-    Input("ecom-tabs", "value"),
-)
-def render_ecom_tabs(selected_tab):
-    if selected_tab == "ec-home":
-        return ec_home_layout
-
-# Run the app
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    logger.debug("Starting the Dash app.")
+    app.run(debug=True)
