@@ -79,53 +79,6 @@ def merge_spsu25_status(sale_order_line, master_sku):
     )
     return merged_data
 
-# Function to compute SPSU25 Status distribution
-def compute_spsu25_distribution(merged_data):
-    """
-    Compute the distribution of SPSU25 Status as percentages.
-
-    Args:
-        merged_data (pd.DataFrame): The merged DataFrame with SPSU25 Status.
-
-    Returns:
-        pd.DataFrame: DataFrame containing SPSU25 Status and their percentages.
-    """
-    if "SPSU25 Status" not in merged_data.columns:
-        raise KeyError("Missing 'SPSU25 Status' column in the merged data.")
-    
-    status_counts = merged_data["SPSU25 Status"].value_counts(normalize=True) * 100
-    status_distribution = status_counts.reset_index().rename(columns={
-        "index": "SPSU25 Status",
-        "SPSU25 Status": "Percentage"
-    })
-    return status_distribution
-
-# Function to create SPSU25 Status pie chart
-def create_spsu25_pie_chart(spsu25_distribution):
-    """
-    Create a Plotly pie chart for SPSU25 Status distribution.
-
-    Args:
-        spsu25_distribution (pd.DataFrame): DataFrame with SPSU25 Status and percentages.
-
-    Returns:
-        dict: Plotly figure object for the pie chart.
-    """
-    if spsu25_distribution is not None and not spsu25_distribution.empty:
-        pie_chart = px.pie(
-            spsu25_distribution,
-            names="SPSU25 Status",
-            values="Percentage",
-            title="SPSU25 Status Distribution",
-            hole=0.4,
-        )
-        return pie_chart
-    else:
-        return {
-            "data": [],
-            "layout": {"title": "No Data Available for SPSU25 Status"},
-        }
-
 # Function to compute statistics
 def compute_statistics(filtered_sale_order_line):
     """
@@ -165,8 +118,14 @@ def compute_statistics(filtered_sale_order_line):
         "top_selling_product": top_selling_product,
     }
 
-# Main logic
-if __name__ == "__main__":
+# Main function to process data
+def process_root_data():
+    """
+    Load and process data, compute statistics, and return cleaned/merged DataFrames and stats.
+
+    Returns:
+        dict: Dictionary containing statistics and processed DataFrames.
+    """
     # Load datasets
     dataframes = load_datasets(FILES, DATA_FOLDER)
 
@@ -183,19 +142,23 @@ if __name__ == "__main__":
         # Merge SPSU25 Status
         merged_data = merge_spsu25_status(filtered_sale_order_line, master_sku)
 
-        # Compute SPSU25 Status distribution
-        spsu25_distribution = compute_spsu25_distribution(merged_data)
-
-        # Create pie chart
-        spsu25_pie_chart = create_spsu25_pie_chart(spsu25_distribution)
-
         # Compute statistics
         stats = compute_statistics(filtered_sale_order_line)
 
-        # Display results for debugging
-        print("Statistics:")
-        print(stats)
-        print("\nSPSU25 Status Distribution:")
-        print(spsu25_distribution)
+        return {
+            "stats": stats,
+            "merged_data": merged_data,
+            "filtered_sale_order_line": filtered_sale_order_line
+        }
     else:
-        print("Error: Missing required datasets.")
+        raise ValueError("Error: Missing required datasets.")
+
+if __name__ == "__main__":
+    # Process data and retrieve results
+    results = process_root_data()
+
+    # Display results for debugging
+    print("Statistics:")
+    print(results["stats"])
+    print("\nMerged Data Preview:")
+    print(results["merged_data"].head())

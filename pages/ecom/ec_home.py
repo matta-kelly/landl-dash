@@ -1,14 +1,9 @@
-# Template for "Coming Soon" Pages
-
 from dash import html
 
-layout = html.Div(
-    className="coming-soon-container",
-    children=[
-        html.H1("Coming Soon", className="coming-soon-title"),
-        html.P(
-            "This page is under construction. Check back soon for updates!",
-            className="coming-soon-description",
-        ),
-    ],
+ec_home = html.Div(
+    [
+        html.H1("Welcome to the Ecom Home Page"),
+        html.P("Ecomerce content coming soon(ish)!"),
+        html.P("For now, navigate to Wholesale"),
+    ]
 )
