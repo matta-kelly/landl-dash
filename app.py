@@ -10,6 +10,7 @@ from pages.wholesale.ws_home import ws_home
 from pages.wholesale.ws_shipping_fufillment import ws_shipping_fufillment
 from pages.wholesale.ws_rep_view import ws_rep_view
 from pages.wholesale.ws_customer_eval import ws_customer_eval
+from pages.wholesale.ws_product import ws_product
 from pages.wholesale.surf_expo.se_home import se_home
 from pages.wholesale.surf_expo.se_customer_eval import se_customer_eval
 from pages.wholesale.surf_expo.se_rep_view import se_rep_view
@@ -99,7 +100,9 @@ def render_page_content(pathname):
             return ws_home()
         elif pathname == "/wholesale/shipping":
             logger.debug("Rendering wholesale shipping page.")
-            return ws_shipping_fufillment
+        elif pathname == "/wholesale/product":
+            logger.debug("Rendering wholesale product page.")
+            return ws_product
         elif pathname == "/wholesale/rep-view":
             logger.debug("Rendering wholesale rep view page.")
             return ws_rep_view
