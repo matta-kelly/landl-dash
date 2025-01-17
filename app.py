@@ -75,6 +75,7 @@ logger.debug("Application layout set.")
     Output("navbar", "children"),  # Update navbar dynamically
     Input("url", "pathname"),     # Listen for URL changes
 )
+
 def update_navbar(pathname):
     logger.debug(f"Updating navbar for pathname: {pathname}")
     navbar_content = generate_navbar(pathname)
@@ -86,6 +87,7 @@ def update_navbar(pathname):
     Output("page-content", "children"),  # Update the page-content container
     Input("url", "pathname"),           # Listen to changes in the URL pathname
 )
+
 def render_page_content(pathname):
     try:
         logger.info(f"Routing triggered with pathname: {pathname}")
@@ -131,4 +133,4 @@ def render_page_content(pathname):
 
 if __name__ == "__main__":
     logger.debug("Starting the Dash app.")
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8050, debug=True)
