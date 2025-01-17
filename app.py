@@ -36,7 +36,7 @@ app = dash.Dash(
     ],
     suppress_callback_exceptions=True,
     update_title="Loading...",
-    title="Wholesale Dashboard",
+    title="L&L Dash",
 )
 
 
@@ -133,4 +133,4 @@ def render_page_content(pathname):
 
 if __name__ == "__main__":
     logger.debug("Starting the Dash app.")
-    app.run(host="0.0.0.0", port=8050, debug=True)
+    app.run(host="0.0.0.0", port=8080, debug=True)

@@ -18,7 +18,7 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose the port that Dash runs on (default is 8050)
-EXPOSE 8050
+EXPOSE 8080
 
 # Set environment variables for Python
 ENV PYTHONUNBUFFERED=1
