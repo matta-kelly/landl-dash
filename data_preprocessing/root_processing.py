@@ -10,8 +10,7 @@ FILES = {
     "sku_inventory": "sku-inventory.csv",
     "sales_orders": "sales-orders.csv",
     "sale_order_line": "sale-order-line.csv",
-    "master_sku": "master-sku.csv",
-    "cleaned_data": "cleaned_data.csv"
+    "master_sku": "master-sku.csv"
 }
 
 # Function to load all datasets
@@ -36,29 +35,10 @@ def load_datasets(files, folder):
             print(f"Error loading {file_name}: {e}")
     return dataframes
 
-# Function to filter sale_order_line by valid orders
-def filter_sale_order_line_by_orders(sale_order_line, sales_orders):
-    """
-    Filter the sale_order_line DataFrame to include only rows with Order Reference
-    present in the sales_orders DataFrame.
-
-    Args:
-        sale_order_line (pd.DataFrame): The main sales order line data.
-        sales_orders (pd.DataFrame): The sales orders containing valid orders.
-
-    Returns:
-        pd.DataFrame: Filtered sale_order_line DataFrame.
-    """
-    if "Order Reference" not in sales_orders.columns or "Order Reference" not in sale_order_line.columns:
-        raise KeyError("Missing 'Order Reference' column in one of the DataFrames.")
-    
-    valid_orders = sales_orders["Order Reference"].unique()
-    return sale_order_line[sale_order_line["Order Reference"].isin(valid_orders)]
-
-# Function to merge SPSU25 Status
+# Function to merge SPSU25 Status and Product Category from Master SKU
 def merge_spsu25_status(sale_order_line, master_sku):
     """
-    Merge SPSU25 Status from master_sku into the sale_order_line DataFrame.
+    Merge SPSU25 Status and Category from master_sku into the sale_order_line DataFrame.
 
     Args:
         sale_order_line (pd.DataFrame): The sale_order_line DataFrame.
@@ -72,12 +52,13 @@ def merge_spsu25_status(sale_order_line, master_sku):
     
     merged_data = pd.merge(
         sale_order_line,
-        master_sku[["SKU (Parent)", "SPSU25 Status"]],
+        master_sku[["SKU", "SPSU25 Status", "Category Group"]],  # Include Category
         left_on="SKU",
-        right_on="SKU (Parent)",
+        right_on="SKU",
         how="left"
     )
     return merged_data
+
 
 # Function to compute statistics
 def compute_statistics(filtered_sale_order_line):
@@ -118,10 +99,34 @@ def compute_statistics(filtered_sale_order_line):
         "top_selling_product": top_selling_product,
     }
 
-# Main function to process data
+# Function to add Surf Expo column to the merged data
+def add_surf_expo_column(merged_data, sales_orders):
+    """
+    Add a Surf Expo column to the merged data. The column will have True if the
+    order reference exists in sales-orders, otherwise False.
+
+    Args:
+        merged_data (pd.DataFrame): The merged DataFrame containing all sales data.
+        sales_orders (pd.DataFrame): The DataFrame containing sales order data.
+
+    Returns:
+        pd.DataFrame: The merged DataFrame with the new Surf Expo column.
+    """
+    if "Order Reference" not in sales_orders.columns:
+        raise KeyError("'Order Reference' column is missing from sales-orders.csv.")
+    if "Order Reference" not in merged_data.columns:
+        raise KeyError("'Order Reference' column is missing from the merged data.")
+
+    valid_orders = sales_orders["Order Reference"].unique()
+    merged_data["Surf Expo"] = merged_data["Order Reference"].isin(valid_orders)
+    return merged_data
+
+
+# Updated process_root_data function
 def process_root_data():
     """
     Load and process data, compute statistics, and return cleaned/merged DataFrames and stats.
+    Additionally, save the merged DataFrame to a CSV file for inspection.
 
     Returns:
         dict: Dictionary containing statistics and processed DataFrames.
@@ -136,22 +141,30 @@ def process_root_data():
 
     # Ensure required DataFrames are loaded
     if sale_order_line is not None and sales_orders is not None and master_sku is not None:
-        # Filter sale_order_line by valid orders from sales_orders
-        filtered_sale_order_line = filter_sale_order_line_by_orders(sale_order_line, sales_orders)
+        # Merge SPSU25 Status and Category
+        merged_data = merge_spsu25_status(sale_order_line, master_sku)
 
-        # Merge SPSU25 Status
-        merged_data = merge_spsu25_status(filtered_sale_order_line, master_sku)
+        # Add Surf Expo column
+        merged_data = add_surf_expo_column(merged_data, sales_orders)
+
+        # Save merged_data to a CSV file for inspection
+        try:
+            merged_data.to_csv("./merged_data_inspection.csv", index=False)
+            print("Merged data saved to merged_data_inspection.csv for inspection.")
+        except Exception as e:
+            print(f"Error saving merged data to CSV: {e}")
 
         # Compute statistics
-        stats = compute_statistics(filtered_sale_order_line)
+        stats = compute_statistics(sale_order_line)
 
         return {
             "stats": stats,
             "merged_data": merged_data,
-            "filtered_sale_order_line": filtered_sale_order_line
+            "filtered_sale_order_line": sale_order_line,
         }
     else:
         raise ValueError("Error: Missing required datasets.")
+
 
 if __name__ == "__main__":
     # Process data and retrieve results

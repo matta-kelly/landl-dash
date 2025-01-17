@@ -5,7 +5,6 @@ import dash_mantine_components as dmc
 from theme import theme
 from components.theme_toggle import theme_toggle
 from components import layout
-from components.navbar import generate_navbar  # Import navbar generator
 from pages.home import home
 from pages.wholesale.ws_home import ws_home
 from pages.wholesale.ws_shipping_fufillment import ws_shipping_fufillment
@@ -17,6 +16,9 @@ from pages.wholesale.surf_expo.se_rep_view import se_rep_view
 from pages.wholesale.surf_expo.se_shipping_fufillment import se_shipping_fufillment
 from pages.ecom.ec_home import ec_home
 import os
+
+from components.navbar import generate_navbar  # Import navbar generator
+from data_preprocessing.root_processing import process_root_data
 
 # Disable file watching for Dash
 os.environ["DASH_NO_DEV_TOOLS"] = "1"
@@ -36,6 +38,19 @@ app = dash.Dash(
     update_title="Loading...",
     title="Wholesale Dashboard",
 )
+
+
+# Access the Flask server
+server = app.server
+
+# Preload data during initialization
+try:
+    data_results = process_root_data()  # Call your processing function
+    server.config['root_data'] = data_results  # Store the results in Flask's config
+    logging.info("Data preloaded successfully and stored in Flask server config.")
+except Exception as e:
+    logging.error(f"Error during data preloading: {e}")
+
 
 # Log app initialization
 logger.debug("Dash app initialized successfully.")
@@ -76,10 +91,10 @@ def render_page_content(pathname):
         logger.info(f"Routing triggered with pathname: {pathname}")
         if pathname == "/" or pathname == "/home":
             logger.debug("Rendering home page.")
-            return home
+            return home()
         elif pathname == "/wholesale":
             logger.debug("Rendering wholesale home page.")
-            return ws_home
+            return ws_home()
         elif pathname == "/wholesale/shipping":
             logger.debug("Rendering wholesale shipping page.")
             return ws_shipping_fufillment
@@ -91,7 +106,7 @@ def render_page_content(pathname):
             return ws_customer_eval
         elif pathname == "/wholesale/surf-expo":
             logger.debug("Rendering wholesale surf expo home page.")
-            return se_home
+            return se_home()
         elif pathname == "/wholesale/surf-expo/customer-eval":
             logger.debug("Rendering wholesale surf expo customer evaluation page.")
             return se_customer_eval
@@ -103,7 +118,7 @@ def render_page_content(pathname):
             return se_shipping_fufillment
         elif pathname == "/ecom":
             logger.debug("Rendering ecom home page.")
-            return ec_home
+            return ec_home()
         else:
             logger.debug("404: Page not found.")
             return html.Div(
