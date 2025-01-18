@@ -7,7 +7,7 @@ from components.theme_toggle import theme_toggle
 from components import layout
 from pages.home import home
 from pages.wholesale.ws_home import ws_home
-from pages.wholesale.ws_shipping_fufillment import ws_shipping_fufillment
+from pages.wholesale.ws_shipping_fufillment import ws_shipping_fulfillment
 from pages.wholesale.ws_rep_view import ws_rep_view
 from pages.wholesale.ws_customer_eval import ws_customer_eval
 from pages.wholesale.ws_product import ws_product
@@ -100,15 +100,16 @@ def render_page_content(pathname):
             return ws_home()
         elif pathname == "/wholesale/shipping":
             logger.debug("Rendering wholesale shipping page.")
+            return ws_shipping_fulfillment()
         elif pathname == "/wholesale/product":
             logger.debug("Rendering wholesale product page.")
-            return ws_product
+            return ws_product()
         elif pathname == "/wholesale/rep-view":
             logger.debug("Rendering wholesale rep view page.")
-            return ws_rep_view
+            return ws_rep_view()
         elif pathname == "/wholesale/customer-eval":
             logger.debug("Rendering wholesale customer evaluation page.")
-            return ws_customer_eval
+            return ws_customer_eval()
         elif pathname == "/wholesale/surf-expo":
             logger.debug("Rendering wholesale surf expo home page.")
             return se_home()

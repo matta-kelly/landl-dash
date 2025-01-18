@@ -84,8 +84,17 @@ def ws_home():
                     ),
                     dmc.Card(
                         children=[
-                            dmc.Text("Total Revenue", fw=500, size="lg"),
-                            dmc.Text(f"${stats['total_revenue']:,.2f}", size="xl", c="green"),
+                            dmc.Text("Revenue in Quotation", fw=500, size="lg"),
+                            dmc.Text(f"${stats['total_revenue_quotation']:,.2f}", size="xl", c="orange"),
+                        ],
+                        withBorder=True,
+                        shadow="sm",
+                        padding="md",
+                    ),
+                    dmc.Card(
+                        children=[
+                            dmc.Text("Revenue Sold", fw=500, size="lg"),
+                            dmc.Text(f"${stats['total_revenue_sold']:,.2f}", size="xl", c="green"),
                         ],
                         withBorder=True,
                         shadow="sm",

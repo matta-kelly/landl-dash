@@ -90,7 +90,7 @@ def process_surf_expo_data():
 
     # Save the filtered Surf Expo data to a CSV file for inspection
     try:
-        surf_expo_data.to_csv("./surf_expo_data_inspection.csv", index=False)
+        surf_expo_data.to_csv("./data/surf_expo_data_inspection.csv", index=False)
         print("Surf Expo data saved to surf_expo_data_inspection.csv for inspection.")
     except Exception as e:
         print(f"Error saving Surf Expo data to CSV: {e}")

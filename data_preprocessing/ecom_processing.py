@@ -74,7 +74,7 @@ def process_ecom_data():
 
     # Save the filtered eCommerce data to a CSV file for inspection
     try:
-        ecom_data.to_csv("./ecom_data_inspection.csv", index=False)
+        ecom_data.to_csv("./data/ecom_data_inspection.csv", index=False)
         print("E-commerce data saved to ecom_data_inspection.csv for inspection.")
     except Exception as e:
         print(f"Error saving e-commerce data to CSV: {e}")

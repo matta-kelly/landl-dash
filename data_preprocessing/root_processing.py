@@ -52,7 +52,7 @@ def merge_spsu25_status(sale_order_line, master_sku):
     
     merged_data = pd.merge(
         sale_order_line,
-        master_sku[["SKU", "SPSU25 Status", "Category Group"]],  # Include Category
+        master_sku[["SKU", "SPSU25 Status", "Category Group", "SKU (Parent)"]],  # Include Category
         left_on="SKU",
         right_on="SKU",
         how="left"
@@ -74,30 +74,47 @@ def compute_statistics(filtered_sale_order_line):
     if filtered_sale_order_line.empty:
         return {
             "total_orders": 0,
-            "total_revenue": 0.0,
+            "total_revenue_sold": 0.0,
+            "total_revenue_quotation": 0.0,
             "avg_order_value": 0.0,
             "top_selling_product": "N/A"
         }
 
+    # Total orders (unique order references)
     total_orders = filtered_sale_order_line["Order Reference"].nunique()
-    total_revenue = filtered_sale_order_line["Subtotal"].sum()
+
+    # Total revenue for "sale" status
+    total_revenue_sold = filtered_sale_order_line[
+        filtered_sale_order_line["Order Status"] == "sale"
+    ]["Subtotal"].sum()
+
+    # Total revenue for "draft" status (quotation)
+    total_revenue_quotation = filtered_sale_order_line[
+        filtered_sale_order_line["Order Status"] == "draft"
+    ]["Subtotal"].sum()
+
+    # Average order value (calculated from sold orders)
     avg_order_value = (
-        filtered_sale_order_line.groupby("Order Reference")["Subtotal"].sum().mean()
+        filtered_sale_order_line[
+            filtered_sale_order_line["Order Status"] == "sale"
+        ].groupby("Order Reference")["Subtotal"].sum().mean()
     )
+
+    # Top-selling product by quantity
     top_selling_product = (
-        filtered_sale_order_line.groupby("SKU")["Quantity"]
-        .sum()
-        .idxmax()
+        filtered_sale_order_line.groupby("SKU")["Quantity"].sum().idxmax()
         if not filtered_sale_order_line.empty
         else "N/A"
     )
 
     return {
         "total_orders": total_orders,
-        "total_revenue": total_revenue,
+        "total_revenue_sold": total_revenue_sold,
+        "total_revenue_quotation": total_revenue_quotation,
         "avg_order_value": avg_order_value,
         "top_selling_product": top_selling_product,
     }
+
 
 # Function to add Surf Expo column to the merged data
 def add_surf_expo_column(merged_data, sales_orders):
@@ -149,7 +166,7 @@ def process_root_data():
 
         # Save merged_data to a CSV file for inspection
         try:
-            merged_data.to_csv("./merged_data_inspection.csv", index=False)
+            merged_data.to_csv("./data/merged_data_inspection.csv", index=False)
             print("Merged data saved to merged_data_inspection.csv for inspection.")
         except Exception as e:
             print(f"Error saving merged data to CSV: {e}")
