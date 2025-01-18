@@ -3,7 +3,8 @@ import dash
 from dash import Dash, dcc, html, Output, Input
 import dash_mantine_components as dmc
 from theme import theme
-from components.theme_toggle import theme_toggle
+from data_preprocessing import data_loader
+from components.theme_toggle import darkModeToggle
 from components import layout
 from pages.home import home
 from pages.wholesale.ws_home import ws_home
@@ -16,9 +17,12 @@ from pages.wholesale.surf_expo.se_customer_eval import se_customer_eval
 from pages.wholesale.surf_expo.se_rep_view import se_rep_view
 from pages.wholesale.surf_expo.se_shipping_fufillment import se_shipping_fufillment
 from pages.ecom.ec_home import ec_home
+from database import db_setup, db_queries
+from database import pragma
 import os
+import pandas as pd
 
-from components.navbar import generate_navbar  # Import navbar generator
+from components.navbar_links import generate_navbar  # Import navbar generator
 from data_preprocessing.root_processing import process_root_data
 
 # Disable file watching for Dash
@@ -44,13 +48,37 @@ app = dash.Dash(
 # Access the Flask server
 server = app.server
 
+# Initilize DB
+try:
+    db_setup.initialize_db()  # Creates tables if they don't exist
+    logging.info("Database initialized successfully.")
+except Exception as e:
+    logging.error(f"Failed to initialize the database: {e}")
+
 # Preload data during initialization
 try:
-    data_results = process_root_data()  # Call your processing function
-    server.config['root_data'] = data_results  # Store the results in Flask's config
-    logging.info("Data preloaded successfully and stored in Flask server config.")
+    # Load raw data using data_loader
+    data = data_loader.load_data()
+    
+    # Store the processed data in Flask's server config
+    db_queries.insert_data_into_db(data)
+    logging.info("Data preloaded successfully and stored in SQL DB")
 except Exception as e:
     logging.error(f"Error during data preloading: {e}")
+    # Better fallback logic
+
+# Function to set root data
+def load_root_data():
+    try:
+        # Process root data and store it in the app's config
+        root_data = process_root_data()  # Process the data and return results
+        app.server.config['root_data'] = root_data  # Store it in the app config
+        logging.info("Root data successfully loaded and stored.")
+    except Exception as e:
+        logging.error(f"Failed to load root data: {e}")
+
+# Ensure this is called before app starts serving requests
+load_root_data()
 
 
 # Log app initialization
@@ -83,6 +111,23 @@ def update_navbar(pathname):
     logger.debug(f"Generated navbar content: {navbar_content}")
     return navbar_content
 
+
+# Page path-to-function mapping
+page_mapping = {
+    "/": home,
+    "/home": home,
+    "/wholesale": ws_home,
+    "/wholesale/shipping": ws_shipping_fulfillment,
+    "/wholesale/product": ws_product,
+    "/wholesale/rep-view": ws_rep_view,
+    "/wholesale/customer-eval": ws_customer_eval,
+    "/wholesale/surf-expo": se_home,
+    "/wholesale/surf-expo/customer-eval": se_customer_eval,
+    "/wholesale/surf-expo/rep-view": se_rep_view,
+    "/wholesale/surf-expo/shipping": se_shipping_fufillment,
+    "/ecom": ec_home,
+}
+
 # Callback for dynamic page rendering
 @app.callback(
     Output("page-content", "children"),  # Update the page-content container
@@ -92,48 +137,17 @@ def update_navbar(pathname):
 def render_page_content(pathname):
     try:
         logger.info(f"Routing triggered with pathname: {pathname}")
-        if pathname == "/" or pathname == "/home":
-            logger.debug("Rendering home page.")
-            return home()
-        elif pathname == "/wholesale":
-            logger.debug("Rendering wholesale home page.")
-            return ws_home()
-        elif pathname == "/wholesale/shipping":
-            logger.debug("Rendering wholesale shipping page.")
-            return ws_shipping_fulfillment()
-        elif pathname == "/wholesale/product":
-            logger.debug("Rendering wholesale product page.")
-            return ws_product()
-        elif pathname == "/wholesale/rep-view":
-            logger.debug("Rendering wholesale rep view page.")
-            return ws_rep_view()
-        elif pathname == "/wholesale/customer-eval":
-            logger.debug("Rendering wholesale customer evaluation page.")
-            return ws_customer_eval()
-        elif pathname == "/wholesale/surf-expo":
-            logger.debug("Rendering wholesale surf expo home page.")
-            return se_home()
-        elif pathname == "/wholesale/surf-expo/customer-eval":
-            logger.debug("Rendering wholesale surf expo customer evaluation page.")
-            return se_customer_eval
-        elif pathname == "/wholesale/surf-expo/rep-view":
-            logger.debug("Rendering wholesale surf expo rep view page.")
-            return se_rep_view
-        elif pathname == "/wholesale/surf-expo/shipping":
-            logger.debug("Rendering wholesale surf expo shipping page.")
-            return se_shipping_fufillment
-        elif pathname == "/ecom":
-            logger.debug("Rendering ecom home page.")
-            return ec_home()
-        else:
-            logger.debug("404: Page not found.")
-            return html.Div(
-                dmc.Text("404: Page not found", ta="center", c="red", size="xl"),
-                style={"textAlign": "center", "marginTop": "50px"},
-            )
+        page = page_mapping.get(pathname, lambda: html.Div(
+            dmc.Text("404: Page not found", ta="center", c="red", size="xl"),
+            style={"textAlign": "center", "marginTop": "50px"},
+        ))
+        return page()
     except Exception as e:
         logger.error(f"Error in render_page_content callback: {e}")
         return html.Div("An error occurred.")
+
+    
+
 
 if __name__ == "__main__":
     logger.debug("Starting the Dash app.")

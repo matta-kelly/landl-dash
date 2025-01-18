@@ -1,4 +1,5 @@
 import dash_mantine_components as dmc
+from components.date_filter import date_filter
 
 # Define the AppShell layout
 layout = dmc.AppShell(
@@ -6,13 +7,15 @@ layout = dmc.AppShell(
         dmc.AppShellHeader(
             dmc.Group(
                 [
-                    dmc.Title("L and L Sales Dashboard", order=2),
-                    #dmc.Text("Choose a section from the navbar."),
+                    dmc.Title("L and L Sales Dashboard", order=2, style={"marginRight": "auto"}),  # Push title to the left
+                    date_filter(),  # Place the date filter on the right
                 ],
-                h="100%",
-                px="md",
+                align="center",  # Vertically align elements
+                justify="space-between",  # Spread elements to opposite ends
+                style={"padding": "0 16px"},  # Add padding for cleaner appearance
             ),
             withBorder=True,
+            style={"backgroundColor": "#f8f9fa"},  # Optional: Add a light background for the header
         ),
         dmc.AppShellNavbar(
             id="navbar",  # Dynamic navbar placeholder
