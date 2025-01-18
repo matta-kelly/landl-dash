@@ -1,32 +1,27 @@
 from dash import html, dcc
 import plotly.express as px
+import plotly.graph_objects as go
 
 def ws_customer_eval():
     """
-    Generates the layout for the Wholesale Customer Evaluation page with a scatter plot
-    for Revenue vs. IMU and a map for geospatial analysis.
+    Generates the layout for the Wholesale Customer Evaluation page, including:
+    - Scatter plot for Revenue vs. IMU.
+    - Map for geospatial analysis.
+    - Segmentation insights (Radar Chart and Clustered Scatter Plot).
 
     Returns:
         dash.html.Div: Layout for the page.
     """
-    # Load processed customer scatter data
+    # Load processed data
     from data_preprocessing.wholesale_processing import process_wholesale_data
     wholesale_data_result = process_wholesale_data()
     customer_scatter_data = wholesale_data_result.get("customer_scatter_data")
     geospatial_data = wholesale_data_result.get("geospatial_data")
+    customer_segmentation_data = wholesale_data_result.get("customer_segmentation_data")
 
-    # Verify and handle scatter plot data
-    if customer_scatter_data is None or customer_scatter_data.empty:
-        scatter_section = html.Div(
-            [
-                html.H2(
-                    "No data available for Customer Scatter Plot at this time.",
-                    style={"textAlign": "center", "color": "gray", "marginTop": "20px"},
-                )
-            ]
-        )
-    else:
-        # Create the scatter plot
+    # Scatter Plot Section
+    scatter_section = html.Div()
+    if customer_scatter_data is not None and not customer_scatter_data.empty:
         scatter_fig = px.scatter(
             customer_scatter_data,
             x="Total Revenue",
@@ -35,15 +30,7 @@ def ws_customer_eval():
             color="Order Frequency",
             hover_data=["Customer", "Order Frequency", "AOV"],
             title="Customer Revenue vs. IMU Analysis",
-            labels={
-                "Total Revenue": "Total Revenue ($)",
-                "IMU (%)": "Profit Margin (IMU %)",
-                "AOV": "Average Order Value ($)",
-                "Order Frequency": "Order Frequency",
-            },
         )
-
-        # Update scatter plot layout
         scatter_fig.update_layout(
             title_x=0.5,
             xaxis_title="Total Revenue ($)",
@@ -52,24 +39,12 @@ def ws_customer_eval():
             margin=dict(l=50, r=50, t=50, b=50),
             coloraxis_colorbar=dict(title="Order Frequency"),
         )
-
-        # Update marker visuals
         scatter_fig.update_traces(marker=dict(opacity=0.7, line=dict(width=0.5, color="black")))
-
         scatter_section = dcc.Graph(figure=scatter_fig, style={"marginTop": "20px"})
 
-    # Verify and handle map data
-    if geospatial_data is None or geospatial_data.empty:
-        map_section = html.Div(
-            [
-                html.H2(
-                    "No data available for Geospatial Analysis at this time.",
-                    style={"textAlign": "center", "color": "gray", "marginTop": "20px"},
-                )
-            ]
-        )
-    else:
-        
+    # Map Section
+    map_section = html.Div()
+    if geospatial_data is not None and not geospatial_data.empty:
         # Map full state names to their abbreviations
         state_abbreviation_map = {
             "Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR", "California": "CA",
@@ -83,12 +58,9 @@ def ws_customer_eval():
             "Tennessee": "TN", "Texas": "TX", "Utah": "UT", "Vermont": "VT", "Virginia": "VA", "Washington": "WA",
             "West Virginia": "WV", "Wisconsin": "WI", "Wyoming": "WY"
         }
+
         geospatial_data["State"] = geospatial_data["State"].map(state_abbreviation_map)
-
-        # Remove invalid or unmapped states
         geospatial_data = geospatial_data.dropna(subset=["State"])
-
-        # Create the choropleth map
         map_fig = px.choropleth(
             geospatial_data,
             locations="State",
@@ -104,54 +76,83 @@ def ws_customer_eval():
             color_continuous_scale="Blues",
             scope="usa",
         )
-
-        # Update map layout
         map_fig.update_layout(
             title_x=0.5,
             margin=dict(l=50, r=50, t=50, b=50),
             geo=dict(bgcolor="rgba(0,0,0,0)"),
             coloraxis_colorbar=dict(title="Revenue ($)", tickformat="$.2f"),
         )
-
         map_section = dcc.Graph(figure=map_fig, style={"marginTop": "20px"})
 
-    # Page layout
+    # Segmentation Insights Section
+    segmentation_section = html.Div()
+    if customer_segmentation_data is not None and not customer_segmentation_data.empty:
+        # Radar Chart for Cluster Insights
+        cluster_summary = customer_segmentation_data.groupby("Cluster").agg(
+            {
+                "Total Revenue (Standardized)": "mean",
+                "AOV (Standardized)": "mean",
+                "IMU (%) (Standardized)": "mean",
+                "Order Frequency (Standardized)": "mean",
+            }
+        ).reset_index()
+
+        radar_fig = go.Figure()
+        metrics = ["Total Revenue (Standardized)", "AOV (Standardized)", "IMU (%) (Standardized)", "Order Frequency (Standardized)"]
+        for _, row in cluster_summary.iterrows():
+            radar_fig.add_trace(
+                go.Scatterpolar(
+                    r=[row[metric] for metric in metrics],
+                    theta=metrics,
+                    fill='toself',
+                    name=f"Cluster {int(row['Cluster'])}",
+                )
+            )
+        radar_fig.update_layout(
+            polar=dict(radialaxis=dict(visible=True)),
+            title="Cluster Insights (Radar Chart)",
+            showlegend=True,
+        )
+        radar_chart = dcc.Graph(figure=radar_fig, style={"marginTop": "20px"})
+
+        # Scatter Plot for Clusters
+        scatter_cluster_fig = px.scatter(
+            customer_segmentation_data,
+            x="Total Revenue",
+            y="IMU (%)",
+            color="Cluster",
+            size="AOV",
+            hover_data=["Customer", "Order Frequency", "Cluster"],
+            title="Clustered Customer Scatter Plot",
+        )
+        scatter_cluster_fig.update_layout(
+            title_x=0.5,
+            xaxis_title="Total Revenue ($)",
+            yaxis_title="Profit Margin (IMU %)",
+            template="simple_white",
+        )
+        cluster_scatter_plot = dcc.Graph(figure=scatter_cluster_fig, style={"marginTop": "20px"})
+
+        segmentation_section = html.Div(
+            [
+                html.H2("Customer Segmentation Insights", style={"textAlign": "center", "marginTop": "40px"}),
+                radar_chart,
+                cluster_scatter_plot,
+            ]
+        )
+
+    # Page Layout
     return html.Div(
         [
             html.H1("Wholesale Customer Evaluation", style={"textAlign": "center"}),
 
             html.H2("Revenue vs. IMU Analysis", style={"textAlign": "center", "marginTop": "20px"}),
-
-            html.Div(
-                [
-                    html.P(
-                        "The scatter plot provides insights into customer performance by plotting total revenue against profit "
-                        "margin (IMU). Each bubble represents a customer, with the size indicating their average order value (AOV) "
-                        "and the color reflecting their order frequency. Hovering over a data point reveals details such as the customer's "
-                        "total revenue, order frequency, and AOV.",
-                        style={"marginTop": "20px", "textAlign": "justify"},
-                    ),
-                ],
-                style={"margin": "20px auto", "width": "80%"},
-            ),
-
             scatter_section,
 
             html.H2("Customer Revenue by State", style={"textAlign": "center", "marginTop": "40px"}),
-
-            html.Div(
-                [
-                    html.P(
-                        "The map illustrates customer revenue distribution across the United States. States with higher revenue are "
-                        "displayed in darker shades, highlighting key regions driving sales. Hover over a state to view detailed metrics, "
-                        "including total revenue, customer count, and average revenue per customer.",
-                        style={"marginTop": "20px", "textAlign": "justify"},
-                    ),
-                ],
-                style={"margin": "20px auto", "width": "80%"},
-            ),
-
             map_section,
+
+            segmentation_section,
         ],
         style={"padding": "20px"},
     )

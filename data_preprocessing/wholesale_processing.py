@@ -353,33 +353,43 @@ def compute_geospatial_data(filtered_data):
     return geospatial_data
 
 
-
-# Updated main function to process wholesale data
-def process_wholesale_data():
+# Updated main function to process wholesale data with testing mode
+def process_wholesale_data(testing=False):
     """
     Process wholesale-specific data, compute statistics, and return DataFrames and stats.
-    Saves the filtered wholesale data and various processed outputs to CSV files.
+    Supports testing mode to load data directly from CSV.
+
+    Args:
+        testing (bool): If True, loads data from `wholesale_data_inspection.csv`.
 
     Returns:
         dict: Dictionary containing statistics, processed DataFrames, and additional processed data.
     """
-    # Access root data from Flask's config
-    root_data = current_app.config['root_data']
-    if not root_data:
-        raise ValueError("Root data not available in Flask config.")
+    if testing:
+        try:
+            # Load wholesale data from CSV
+            wholesale_data = pd.read_csv("./data/wholesale_data_inspection.csv")
+            print("Loaded wholesale data from CSV for testing.")
+        except FileNotFoundError:
+            raise FileNotFoundError("The wholesale_data_inspection.csv file is missing. Ensure it exists for testing.")
+    else:
+        # Access root data from Flask's config
+        root_data = current_app.config['root_data']
+        if not root_data:
+            raise ValueError("Root data not available in Flask config.")
+        
+        # Access the merged data
+        merged_data = root_data['merged_data']
 
-    # Access the merged data
-    merged_data = root_data['merged_data']
+        # Filter for wholesale-specific sales
+        wholesale_data = filter_wholesale_data(merged_data)
 
-    # Filter for wholesale-specific sales
-    wholesale_data = filter_wholesale_data(merged_data)
-
-    # Save the filtered wholesale data to a CSV file for inspection
-    try:
-        wholesale_data.to_csv("./data/wholesale_data_inspection.csv", index=False)
-        print("Wholesale data saved to wholesale_data_inspection.csv for inspection.")
-    except Exception as e:
-        print(f"Error saving wholesale data to CSV: {e}")
+        # Save the filtered wholesale data to a CSV file for inspection
+        try:
+            wholesale_data.to_csv("./data/wholesale_data_inspection.csv", index=False)
+            print("Wholesale data saved to wholesale_data_inspection.csv for inspection.")
+        except Exception as e:
+            print(f"Error saving wholesale data to CSV: {e}")
 
     # Compute statistics
     stats = compute_statistics(wholesale_data)
@@ -429,6 +439,20 @@ def process_wholesale_data():
         print(f"Error computing geospatial data: {e}")
         geospatial_data = None
 
+    try:
+        from ml_scripts.customer_segmentation import compute_customer_segmentation
+        
+        # Pass wholesale_data only when not in testing mode
+        customer_segmentation_data = compute_customer_segmentation(wholesale_data=wholesale_data, testing=False)  # testing=False for production
+        customer_segmentation_data.to_csv("./data/customer_segmentation.csv", index=False)
+        print("Customer segmentation data saved to customer_segmentation.csv.")
+    except Exception as e:
+        print(f"Error computing customer segmentation data: {e}")
+        customer_segmentation_data = None
+
+
+    
+
     return {
         "stats": stats,
         "merged_data": wholesale_data,
@@ -438,6 +462,7 @@ def process_wholesale_data():
         "product_profit_analysis": product_profit_analysis,
         "customer_scatter_data": customer_scatter_data,
         "geospatial_data": geospatial_data,
+        "customer_segmentation_data": customer_segmentation_data,
     }
 
 
