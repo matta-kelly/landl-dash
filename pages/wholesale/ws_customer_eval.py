@@ -21,6 +21,7 @@ def ws_customer_eval():
 
     # Scatter Plot Section
     scatter_section = html.Div()
+    scatter_description = html.P()
     if customer_scatter_data is not None and not customer_scatter_data.empty:
         scatter_fig = px.scatter(
             customer_scatter_data,
@@ -42,8 +43,17 @@ def ws_customer_eval():
         scatter_fig.update_traces(marker=dict(opacity=0.7, line=dict(width=0.5, color="black")))
         scatter_section = dcc.Graph(figure=scatter_fig, style={"marginTop": "20px"})
 
+        scatter_description = html.P(
+            "The scatter plot visualizes customers with Total Revenue on the x-axis and IMU (Initial Markup Percentage) on "
+            "the y-axis. Each bubble represents a customer, with the size of the bubble corresponding to the Average Order "
+            "Value (AOV). The color of the bubbles represents the Order Frequency, transitioning from lighter to darker shades "
+            "as frequency increases. Hovering over a bubble reveals detailed information about the customer, including their "
+            "name, AOV, and order frequency. The layout uses a clean white background to ensure clarity."
+        )
+
     # Map Section
     map_section = html.Div()
+    map_description = html.P()
     if geospatial_data is not None and not geospatial_data.empty:
         # Map full state names to their abbreviations
         state_abbreviation_map = {
@@ -84,8 +94,17 @@ def ws_customer_eval():
         )
         map_section = dcc.Graph(figure=map_fig, style={"marginTop": "20px"})
 
+        map_description = html.P(
+            "The choropleth map displays revenue distribution across the United States, with each state's color intensity "
+            "corresponding to its Total Revenue. Darker shades of blue indicate higher revenue, while lighter shades represent "
+            "lower revenue. Hovering over a state reveals additional details, including the total revenue, number of customers, "
+            "and average revenue per customer. The map is confined to the USA for regional focus and uses a clean color palette "
+            "for readability."
+        )
+
     # Segmentation Insights Section
     segmentation_section = html.Div()
+    segmentation_description = html.P()
     if customer_segmentation_data is not None and not customer_segmentation_data.empty:
         # Radar Chart for Cluster Insights
         cluster_summary = customer_segmentation_data.groupby("Cluster").agg(
@@ -141,6 +160,13 @@ def ws_customer_eval():
             ]
         )
 
+        segmentation_description = html.P(
+            "The radar chart highlights the average values of standardized metrics (Total Revenue, AOV, IMU %, and Order "
+            "Frequency) for each customer cluster, with each axis representing a metric. The clustered scatter plot visualizes "
+            "individual customers with Total Revenue on the x-axis and IMU (%) on the y-axis. Bubble sizes correspond to AOV, "
+            "and colors represent cluster assignments, helping distinguish customer groups based on behavior."
+        )
+
     # Page Layout
     return html.Div(
         [
@@ -148,11 +174,14 @@ def ws_customer_eval():
 
             html.H2("Revenue vs. IMU Analysis", style={"textAlign": "center", "marginTop": "20px"}),
             scatter_section,
+            scatter_description,
 
             html.H2("Customer Revenue by State", style={"textAlign": "center", "marginTop": "40px"}),
             map_section,
+            map_description,
 
             segmentation_section,
+            segmentation_description,
         ],
         style={"padding": "20px"},
     )

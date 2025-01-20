@@ -2,7 +2,7 @@ import logging
 import dash
 from dash import Dash, dcc, html, Output, Input
 import dash_mantine_components as dmc
-from theme import theme
+from components.theme import theme
 from data_preprocessing import data_loader
 from components.theme_toggle import darkModeToggle
 from components import layout
@@ -13,6 +13,7 @@ from pages.wholesale.ws_rep_view import ws_rep_view
 from pages.wholesale.ws_customer_eval import ws_customer_eval
 from pages.wholesale.ws_product import ws_product
 from pages.ecom.ec_home import ec_home
+from pages.wholesale.se_expo import se_recap
 from database import db_insert, db_setup
 import os
 import pandas as pd
@@ -129,17 +130,6 @@ logger.debug("Dash app initialized successfully.")
 app.layout = dmc.MantineProvider(
     id="mantine-provider",
     theme=theme,
-    forceColorScheme="light",
-    children=[
-        dcc.Location(id="url", refresh=False),  # Tracks current URL
-        layout.layout,  # Use the layout object from components/layout.py
-    ],
-)
-
-# Wrap the layout in MantineProvider
-app.layout = dmc.MantineProvider(
-    id="mantine-provider",
-    theme=theme,
     forceColorScheme="light",  # Default light mode
     children=[
         dcc.Store(id="theme-store", data={"theme": "light"}),  # Global theme state
@@ -174,6 +164,7 @@ page_mapping = {
     "/wholesale/product": ws_product,
     "/wholesale/rep-view": ws_rep_view,
     "/wholesale/customer-eval": ws_customer_eval,
+    "/wholesale/se": se_recap,
     "/ecom": ec_home,
 }
 

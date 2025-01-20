@@ -181,12 +181,13 @@ def compute_rep_monthly_summary(filtered_data):
     Returns:
         pd.DataFrame: Pivot table showing reps as rows, months as columns, and total values for
                       quotations and revenue.
-    """
+    
     required_columns = ["Delivery Date", "Salesperson", "Order Status", "Subtotal"]
     for col in required_columns:
         if col not in filtered_data.columns:
             raise KeyError(f"'{col}' column is missing from the filtered data.")
-
+    """
+    
     # Parse the Delivery Date column to datetime and extract the month
     filtered_data = filtered_data.copy()
     filtered_data["Delivery Date"] = pd.to_datetime(filtered_data["Delivery Date"], errors="coerce")

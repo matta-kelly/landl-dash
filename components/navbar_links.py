@@ -23,6 +23,7 @@ def generate_navbar(pathname):
                     dmc.NavLink(label="Rep View", href="/wholesale/rep-view"),
                     dmc.NavLink(label="Customer Evaluation", href="/wholesale/customer-eval"),
                     dmc.NavLink(label="Product Analysis", href="/wholesale/product"),
+                    dmc.NavLink(label="Surf Expo", href="/wholesale/se"),
                 ],
             ),
             dmc.NavLink(label="Ecom", href="/ecom", childrenOffset=28),

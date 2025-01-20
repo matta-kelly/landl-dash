@@ -12,7 +12,6 @@ def ws_rep_view():
     """
     rep_summary = current_app.config.get('wholesale_rep_summary')
 
-
     if rep_summary is None or rep_summary.empty:
         return html.Div(
             [
@@ -92,6 +91,37 @@ def ws_rep_view():
             html.H1("Wholesale Rep View", style={"textAlign": "center"}),
 
             html.H2("Monthly Summary by Sales Rep", style={"textAlign": "center", "marginTop": "20px"}),
+
+            # Explanatory text
+            html.Div(
+                [
+                    html.P(
+                        "This table provides a detailed summary of sales and quotations for each salesperson. "
+                        "Each row represents an individual salesperson, displaying their sales performance metrics "
+                        "such as revenue and quotations for specific periods.",
+                        style={"marginTop": "20px", "textAlign": "justify"},
+                    ),
+                    html.P(
+                        "Columns in the table include 'Total Quotation $' and 'Total Revenue $', which aggregate "
+                        "the quotation amounts and revenue amounts across all relevant periods. These columns "
+                        "appear at the far right for quick comparison of overall performance among sales reps.",
+                        style={"marginTop": "10px", "textAlign": "justify"},
+                    ),
+                    html.P(
+                        "The rows alternate in color for readability, with white rows for even indices and light gray "
+                        "rows for odd indices. A final row labeled 'Total' provides aggregate sums for each column, "
+                        "highlighted in light blue for distinction. This row gives an overview of the cumulative "
+                        "performance of all sales reps combined.",
+                        style={"marginTop": "10px", "textAlign": "justify"},
+                    ),
+                    html.P(
+                        "Hovering over the table allows you to visually identify specific data points more easily. "
+                        "The table is styled with consistent borders and padding to enhance its professional appearance.",
+                        style={"marginTop": "10px", "textAlign": "justify"},
+                    ),
+                ],
+                style={"margin": "20px auto", "width": "80%"},
+            ),
 
             # Table displaying the rep summary
             dmc.Table(

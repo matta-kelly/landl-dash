@@ -14,32 +14,41 @@ def home():
     jewelry_data = merged_data[merged_data["Category Group"] == "JEWELRY"]
 
     # Group clothing data by SKU to remove duplicates
-    clothing_data_grouped = clothing_data.groupby("SKU", as_index=False).agg({
+    clothing_data_grouped = clothing_data.groupby("SKU (Parent)", as_index=False).agg({
         "Subtotal": "sum",  # Sum up revenue for each SKU
         "Quantity": "sum",  # Sum up quantity sold
     })
 
     # Group jewelry data by SKU to remove duplicates
-    jewelry_data_grouped = jewelry_data.groupby("SKU", as_index=False).agg({
+    jewelry_data_grouped = jewelry_data.groupby("SKU (Parent)", as_index=False).agg({
         "Subtotal": "sum",  # Sum up revenue for each SKU
         "Quantity": "sum",  # Sum up quantity sold
     })
 
     # Compute Clothing Stats
     clothing_stats = {
-        "total_skus": clothing_data_grouped["SKU"].nunique(),
+        "total_skus": clothing_data_grouped["SKU (Parent)"].nunique(),  # Use "SKU (Parent)"
         "total_revenue": clothing_data_grouped["Subtotal"].sum(),
-        "productivity_per_sku": clothing_data_grouped["Subtotal"].sum() / clothing_data_grouped["SKU"].nunique()
-        if clothing_data_grouped["SKU"].nunique() > 0 else 0,
+        "productivity_per_sku": clothing_data_grouped["Subtotal"].sum() / clothing_data_grouped["SKU (Parent)"].nunique()
+        if clothing_data_grouped["SKU (Parent)"].nunique() > 0 else 0,  # Correct column
     }
 
     # Compute Jewelry Stats
     jewelry_stats = {
-        "total_skus": jewelry_data_grouped["SKU"].nunique(),
+        "total_skus": jewelry_data_grouped["SKU (Parent)"].nunique(),  # Use "SKU (Parent)"
         "total_revenue": jewelry_data_grouped["Subtotal"].sum(),
-        "productivity_per_sku": jewelry_data_grouped["Subtotal"].sum() / jewelry_data_grouped["SKU"].nunique()
-        if jewelry_data_grouped["SKU"].nunique() > 0 else 0,
+        "productivity_per_sku": jewelry_data_grouped["Subtotal"].sum() / jewelry_data_grouped["SKU (Parent)"].nunique()
+        if jewelry_data_grouped["SKU (Parent)"].nunique() > 0 else 0,  # Correct column
     }
+
+    # Filter out rows where Fabric SKU is 'A'
+    fabric_data = merged_data[(merged_data["Fabric SKU"] != 'A') & (merged_data["Fabric SKU"] != '<NA>')]
+
+    # Group by Fabric SKU and calculate aggregated metrics
+    fabric_data_grouped = fabric_data.groupby("Fabric SKU", as_index=False).agg({
+        "Subtotal": "sum",  # Total revenue
+        "Quantity": "sum",  # Total quantity sold
+    })
 
     # Create SPSU25 Status Distribution Pie Chart
     spsu25_distribution = merged_data["SPSU25 Status"].value_counts(normalize=True).reset_index()
@@ -128,7 +137,7 @@ def home():
                         [
                             html.Tr(
                                 [
-                                    html.Td("Total SKUs Sold"),
+                                    html.Td("Total SKUs sold"),
                                     html.Td(f"{clothing_stats['total_skus']:,}"),
                                     html.Td(f"{jewelry_stats['total_skus']:,}"),
                                 ]
@@ -154,7 +163,6 @@ def home():
                 highlightOnHover=True,
                 withTableBorder=True,
                 withColumnBorders=True,
-                style={"margin": "0 auto", "width": "80%", "marginTop": "20px"},
             ),
 
             # SPSU25 Pie Chart
@@ -162,7 +170,7 @@ def home():
             dcc.Graph(figure=pie_chart, style={"marginTop": "20px"}),
 
             # Clothing Collections Table
-            html.H2("Clothing Collections", style={"textAlign": "center", "marginTop": "40px"}),
+            html.H2("Clothing Parent SKU's", style={"textAlign": "center", "marginTop": "40px"}),
             dmc.Table(
                 [
                     html.Thead(
@@ -178,12 +186,12 @@ def home():
                         [
                             html.Tr(
                                 [
-                                    html.Td(row["SKU"]),
+                                    html.Td(row["SKU (Parent)"]),
                                     html.Td(f"{row['Quantity']:,}"),
                                     html.Td(f"${row['Subtotal']:,.2f}"),
                                 ]
                             )
-                            for _, row in clothing_data_grouped.sort_values(by="Subtotal", ascending=False).head(10).iterrows()
+                            for _, row in clothing_data_grouped.sort_values(by="Subtotal", ascending=False).head(20).iterrows()
                         ]
                     ),
                 ],
@@ -191,11 +199,10 @@ def home():
                 highlightOnHover=True,
                 withTableBorder=True,
                 withColumnBorders=True,
-                style={"margin": "0 auto", "width": "80%", "marginTop": "20px"},
             ),
 
             # Jewelry Collections Table
-            html.H2("Jewelry Collections", style={"textAlign": "center", "marginTop": "40px"}),
+            html.H2("Jewelry Parent SKU's", style={"textAlign": "center", "marginTop": "40px"}),
             dmc.Table(
                 [
                     html.Thead(
@@ -211,12 +218,12 @@ def home():
                         [
                             html.Tr(
                                 [
-                                    html.Td(row["SKU"]),
+                                    html.Td(row["SKU (Parent)"]),
                                     html.Td(f"{row['Quantity']:,}"),
                                     html.Td(f"${row['Subtotal']:,.2f}"),
                                 ]
                             )
-                            for _, row in jewelry_data_grouped.sort_values(by="Subtotal", ascending=False).head(10).iterrows()
+                            for _, row in jewelry_data_grouped.sort_values(by="Subtotal", ascending=False).head(20).iterrows()
                         ]
                     ),
                 ],
@@ -224,7 +231,38 @@ def home():
                 highlightOnHover=True,
                 withTableBorder=True,
                 withColumnBorders=True,
-                style={"margin": "0 auto", "width": "80%", "marginTop": "20px"},
+            ),
+
+            # Fabric SKU Table
+            html.H2("Fabric SKU Summary", style={"textAlign": "center", "marginTop": "40px"}),
+            dmc.Table(
+                [
+                    html.Thead(
+                        html.Tr(
+                            [
+                                html.Th("Fabric SKU"),
+                                html.Th("Qty Sold"),
+                                html.Th("Total Revenue"),
+                            ]
+                        )
+                    ),
+                    html.Tbody(
+                        [
+                            html.Tr(
+                                [
+                                    html.Td(row["Fabric SKU"]),
+                                    html.Td(f"{row['Quantity']:,}"),
+                                    html.Td(f"${row['Subtotal']:,.2f}"),
+                                ]
+                            )
+                            for _, row in fabric_data_grouped.sort_values(by="Subtotal", ascending=False).head(20).iterrows()
+                        ]
+                    ),
+                ],
+                striped=True,
+                highlightOnHover=True,
+                withTableBorder=True,
+                withColumnBorders=True,
             ),
         ],
         style={"padding": "20px"},

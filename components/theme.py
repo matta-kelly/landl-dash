@@ -94,12 +94,35 @@ theme = {
             "textDecoration": "none",
             "hover": {"textDecoration": "underline"},
         },
-    },
-    "animations": {
-        "fadeIn": "fade-in 0.5s ease-in-out",
-        "hoverGrow": "transform 0.2s ease-in-out",
-    },
+        "table": {
+        "width": "100%",
+        "borderCollapse": "collapse",
+        "margin": "20px auto",
+        "border": "1px solid #dee2e6",
+        },
+        "th": {
+            "textAlign": "center",
+            "padding": "10px",
+            "fontSize": "16px",
+            "borderBottom": "2px solid #dee2e6",
+            "backgroundColor": "#f8f9fa",
+        },
+        "td": {
+            "textAlign": "center",
+            "padding": "10px",
+            "fontSize": "14px",
+            "borderBottom": "1px solid #dee2e6",
+        },
+        "tr": {
+            "borderBottom": "1px solid #dee2e6",
+            "hover": {"backgroundColor": "#f1f3f5"},
+        },
+        },
+        "animations": {
+            "fadeIn": "fade-in 0.5s ease-in-out",
+            "hoverGrow": "transform 0.2s ease-in-out",
+        },
 }
 
 # Optional: Export the default theme for fallback
-default_theme = DEFAULT_THEME
+#default_theme = DEFAULT_THEME

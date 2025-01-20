@@ -32,7 +32,7 @@ layout = dmc.AppShell(
         dmc.AppShellMain(
             dmc.Container(
                 id="page-content",  # Dynamic page content placeholder
-                style={"padding": "16px"},
+                #style={"padding": "16px"},
             ),
         ),
     ],
