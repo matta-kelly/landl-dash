@@ -1,6 +1,7 @@
 from dash import html, dcc
 import plotly.express as px
 import dash_mantine_components as dmc
+from flask import current_app
 
 def ws_shipping_fulfillment():
     """
@@ -10,10 +11,9 @@ def ws_shipping_fulfillment():
     Returns:
         dash.html.Div: Layout for the page.
     """
-    # Load processed delivery data
-    from data_preprocessing.wholesale_processing import process_wholesale_data
-    wholesale_data_result = process_wholesale_data()
-    delivery_distribution = wholesale_data_result.get("delivery_distribution")
+
+    delivery_distribution = current_app.config.get('wholesale_delivery_distribution')
+
 
     # Handle missing or None delivery distribution gracefully
     if delivery_distribution is None or delivery_distribution.empty:

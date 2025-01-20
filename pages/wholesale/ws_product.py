@@ -1,5 +1,6 @@
 from dash import html, dcc
 import plotly.express as px
+from flask import current_app
 
 def ws_product():
     """
@@ -9,10 +10,8 @@ def ws_product():
     Returns:
         dash.html.Div: Layout for the page.
     """
-    # Load processed product profit analysis data
-    from data_preprocessing.wholesale_processing import process_wholesale_data
-    wholesale_data_result = process_wholesale_data()
-    product_profit_analysis = wholesale_data_result.get("product_profit_analysis")
+    product_profit_analysis = current_app.config.get('wholesale_product_profit_analysis')
+
 
     if product_profit_analysis is None or product_profit_analysis.empty:
         return html.Div(

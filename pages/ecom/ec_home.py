@@ -10,13 +10,10 @@ def ec_home():
     Returns:
         dash.html.Div: Layout for the page.
     """
-    # Access eCommerce data processing
-    from data_preprocessing.ecom_processing import process_ecom_data
-
     # Get the filtered eCommerce data (as a DataFrame) and stats
-    ecom_data_result = process_ecom_data()
-    stats = ecom_data_result['stats']
-    ecom_data = ecom_data_result['merged_data']  # Use the correct key 'merged_data'
+    stats = current_app.config.get('ecom_stats')
+    ecom_data = current_app.config.get('ecom_merged_data')
+
 
     # Compute Clothing vs. Jewelry data
     clothing_data = ecom_data[ecom_data["Category Group"] == "CLOTHING"]

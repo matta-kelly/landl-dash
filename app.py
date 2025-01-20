@@ -12,18 +12,13 @@ from pages.wholesale.ws_shipping_fufillment import ws_shipping_fulfillment
 from pages.wholesale.ws_rep_view import ws_rep_view
 from pages.wholesale.ws_customer_eval import ws_customer_eval
 from pages.wholesale.ws_product import ws_product
-from pages.wholesale.surf_expo.se_home import se_home
-from pages.wholesale.surf_expo.se_customer_eval import se_customer_eval
-from pages.wholesale.surf_expo.se_rep_view import se_rep_view
-from pages.wholesale.surf_expo.se_shipping_fufillment import se_shipping_fufillment
 from pages.ecom.ec_home import ec_home
-from database import db_setup, db_queries
-from database import pragma
+from database import db_insert, db_setup
 import os
 import pandas as pd
 
 from components.navbar_links import generate_navbar  # Import navbar generator
-from data_preprocessing.root_processing import process_root_data
+from data_preprocessing import root_processing, ecom_processing, wholesale_processing
 
 # Disable file watching for Dash
 os.environ["DASH_NO_DEV_TOOLS"] = "1"
@@ -61,8 +56,12 @@ try:
     data = data_loader.load_data()
     
     # Store the processed data in Flask's server config
-    db_queries.insert_data_into_db(data)
+    db_insert.insert_data_into_db(data)
     logging.info("Data preloaded successfully and stored in SQL DB")
+
+    #Checking
+    db_insert.save_sql_table_to_csv("sale_order_line", "./data/sql_sale_order_line.csv")
+    db_insert.save_sql_table_to_csv("master_sku", "./data/sql_master_sku.csv")
 except Exception as e:
     logging.error(f"Error during data preloading: {e}")
     # Better fallback logic
@@ -71,15 +70,57 @@ except Exception as e:
 def load_root_data():
     try:
         # Process root data and store it in the app's config
-        root_data = process_root_data()  # Process the data and return results
+        root_data = root_processing.process_root_data()  # Process the data and return results
         app.server.config['root_data'] = root_data  # Store it in the app config
         logging.info("Root data successfully loaded and stored.")
     except Exception as e:
         logging.error(f"Failed to load root data: {e}")
 
+
+# Function to set eCommerce data
+def load_ecom_data():
+    try:
+        # Ensure Flask app context is available
+        with app.server.app_context():
+            # Process eCommerce data and store it in the app's config
+            ecom_data_result = ecom_processing.process_ecom_data()  # Process the data and return results
+
+            # Save individual components of the eCommerce data into Flask's config
+            app.server.config['ecom_stats'] = ecom_data_result.get("stats")
+            app.server.config['ecom_merged_data'] = ecom_data_result.get("merged_data")
+            app.server.config['ecom_filtered_sale_order_line'] = ecom_data_result.get("filtered_sale_order_line")
+
+            logging.info("eCommerce data successfully loaded and stored.")
+    except Exception as e:
+        logging.error(f"Failed to load eCommerce data: {e}")
+
+# Function to set wholesale data
+def load_wholesale_data():
+    try:
+        # Ensure Flask app context is available
+        with app.server.app_context():
+            # Process wholesale data and store it in the app's config
+            wholesale_data_result = wholesale_processing.process_wholesale_data()  # Process the data and return results
+
+            # Save individual components of the wholesale data into Flask's config
+            app.server.config['wholesale_stats'] = wholesale_data_result.get("stats")
+            app.server.config['wholesale_merged_data'] = wholesale_data_result.get("merged_data")
+            app.server.config['wholesale_filtered_sale_order_line'] = wholesale_data_result.get("filtered_sale_order_line")
+            app.server.config['wholesale_delivery_distribution'] = wholesale_data_result.get("delivery_distribution")
+            app.server.config['wholesale_rep_summary'] = wholesale_data_result.get("rep_summary")
+            app.server.config['wholesale_product_profit_analysis'] = wholesale_data_result.get("product_profit_analysis")
+            app.server.config['wholesale_customer_scatter_data'] = wholesale_data_result.get("customer_scatter_data")
+            app.server.config['wholesale_geospatial_data'] = wholesale_data_result.get("geospatial_data")
+            app.server.config['wholesale_customer_segmentation_data'] = wholesale_data_result.get("customer_segmentation_data")
+
+            logging.info("Wholesale data successfully loaded and stored.")
+    except Exception as e:
+        logging.error(f"Failed to load wholesale data: {e}")
+
 # Ensure this is called before app starts serving requests
 load_root_data()
-
+load_ecom_data()
+load_wholesale_data()
 
 # Log app initialization
 logger.debug("Dash app initialized successfully.")
@@ -121,10 +162,6 @@ page_mapping = {
     "/wholesale/product": ws_product,
     "/wholesale/rep-view": ws_rep_view,
     "/wholesale/customer-eval": ws_customer_eval,
-    "/wholesale/surf-expo": se_home,
-    "/wholesale/surf-expo/customer-eval": se_customer_eval,
-    "/wholesale/surf-expo/rep-view": se_rep_view,
-    "/wholesale/surf-expo/shipping": se_shipping_fufillment,
     "/ecom": ec_home,
 }
 
@@ -151,4 +188,4 @@ def render_page_content(pathname):
 
 if __name__ == "__main__":
     logger.debug("Starting the Dash app.")
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=8080)

@@ -1,6 +1,7 @@
 from dash import html, dcc
 import plotly.express as px
 import plotly.graph_objects as go
+from flask import current_app
 
 def ws_customer_eval():
     """
@@ -12,12 +13,11 @@ def ws_customer_eval():
     Returns:
         dash.html.Div: Layout for the page.
     """
-    # Load processed data
-    from data_preprocessing.wholesale_processing import process_wholesale_data
-    wholesale_data_result = process_wholesale_data()
-    customer_scatter_data = wholesale_data_result.get("customer_scatter_data")
-    geospatial_data = wholesale_data_result.get("geospatial_data")
-    customer_segmentation_data = wholesale_data_result.get("customer_segmentation_data")
+
+    # Access individual components if needed
+    customer_scatter_data = current_app.config.get('wholesale_customer_scatter_data')
+    geospatial_data = current_app.config.get('wholesale_geospatial_data')
+    customer_segmentation_data = current_app.config.get('wholesale_customer_segmentation_data')
 
     # Scatter Plot Section
     scatter_section = html.Div()

@@ -10,13 +10,10 @@ def ws_home():
     Returns:
         dash.html.Div: Layout for the page.
     """
-    # Access wholesale data processing
-    from data_preprocessing.wholesale_processing import process_wholesale_data
-
-    # Get the filtered wholesale data (as a DataFrame) and stats
-    wholesale_data_result = process_wholesale_data()
-    stats = wholesale_data_result['stats']
-    wholesale_data = wholesale_data_result['merged_data']  # Use the correct key 'merged_data'
+    
+    # Retrieve stats and wholesale data using the correct keys
+    stats = current_app.config.get('wholesale_stats')
+    wholesale_data = current_app.config.get('wholesale_merged_data')
 
     # Compute Clothing vs. Jewelry data
     clothing_data = wholesale_data[wholesale_data["Category Group"] == "CLOTHING"]

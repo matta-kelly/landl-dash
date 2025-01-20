@@ -101,9 +101,6 @@ def preprocess_csv(dataframes):
             # If the column is numeric, convert to numeric (coerce invalid to NaN)
             else:
                 df[col] = pd.to_numeric(df[col], errors="coerce")
-        
-        # Remove unwanted columns like "Unnamed: 43" and "Unnamed: 44"
-        df.drop(columns=[col for col in df.columns if 'Unnamed' in col], inplace=True, errors='ignore')
 
         # Log after processing
         logger.info(f"Preprocessed DataFrame: {key}")

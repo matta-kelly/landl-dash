@@ -1,5 +1,6 @@
 from dash import html
 import dash_mantine_components as dmc
+from flask import current_app
 
 def ws_rep_view():
     """
@@ -9,10 +10,8 @@ def ws_rep_view():
     Returns:
         dash.html.Div: Layout for the page.
     """
-    # Load processed rep summary data
-    from data_preprocessing.wholesale_processing import process_wholesale_data
-    wholesale_data_result = process_wholesale_data()
-    rep_summary = wholesale_data_result.get("rep_summary")
+    rep_summary = current_app.config.get('wholesale_rep_summary')
+
 
     if rep_summary is None or rep_summary.empty:
         return html.Div(

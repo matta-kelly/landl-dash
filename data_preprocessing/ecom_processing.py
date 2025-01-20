@@ -66,7 +66,7 @@ def process_ecom_data():
     if not root_data:
         raise ValueError("Root data not available in Flask config.")
 
-    # Access the merged data
+    # Access the merged datae
     merged_data = root_data['merged_data']
 
     # Filter for eCommerce-specific sales
