@@ -1,6 +1,7 @@
 import dash_mantine_components as dmc
 from dash import html, Input, Output, State, callback
 from dash_iconify import DashIconify
+from components.theme_toggle import darkModeToggle
 
 def sidebarNav(pathname, title="Menu", border=True, collapse=True):
     """
@@ -35,6 +36,7 @@ def sidebarNav(pathname, title="Menu", border=True, collapse=True):
                 dmc.Navbar(
                     children=[
                         dmc.Avatar(style={"display": "block", "width": "100%"}),
+                        darkModeToggle(),
                         *nav_links,  # Insert dynamically generated links
                     ],
                     style=navStyle,

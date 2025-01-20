@@ -136,6 +136,18 @@ app.layout = dmc.MantineProvider(
     ],
 )
 
+# Wrap the layout in MantineProvider
+app.layout = dmc.MantineProvider(
+    id="mantine-provider",
+    theme=theme,
+    forceColorScheme="light",  # Default light mode
+    children=[
+        dcc.Store(id="theme-store", data={"theme": "light"}),  # Global theme state
+        dcc.Location(id="url", refresh=False),  # Tracks current URL
+        layout.layout,  # Use the layout object from components/layout.py
+    ],
+)
+
 # Log the application layout setup
 logger.debug("Application layout set.")
 
@@ -184,6 +196,49 @@ def render_page_content(pathname):
         return html.Div("An error occurred.")
 
     
+@app.callback(
+    [
+        Output("theme-store", "data"),  # Update the theme store
+        Output("mantine-provider", "theme"),  # Update the Mantine theme dynamically
+        Output("mantine-provider", "forceColorScheme"),  # Update color scheme (light/dark)
+        Output("header", "style"),  # Update header style
+        Output("header-text", "style"),  # Update header text style
+    ],
+    Input("themeSwitch", "checked"),  # Listen for changes in the toggle state
+)
+def update_theme(is_dark_mode):
+    """
+    Updates the theme for the app and applies corresponding styles.
+    """
+    if is_dark_mode:
+        dark_theme = {
+            **theme,  # Base theme
+            "colorScheme": "dark",
+        }
+        header_style = {
+            "backgroundColor": "#1a202c",
+            "color": "#e2e8f0",
+        }
+        text_style = {
+            "color": "#e2e8f0",
+        }
+        return {"theme": "dark"}, dark_theme, "dark", header_style, text_style
+    else:
+        light_theme = {
+            **theme,  # Base theme
+            "colorScheme": "light",
+        }
+        header_style = {
+            "backgroundColor": "#f8f9fa",
+            "color": "#1a202c",
+        }
+        text_style = {
+            "color": "#1a202c",
+        }
+        return {"theme": "light"}, light_theme, "light", header_style, text_style
+
+
+
 
 
 if __name__ == "__main__":

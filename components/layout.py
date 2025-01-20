@@ -1,5 +1,6 @@
 import dash_mantine_components as dmc
 from components.date_filter import date_filter
+from components.theme_toggle import darkModeToggle
 
 # Define the AppShell layout
 layout = dmc.AppShell(
@@ -8,7 +9,8 @@ layout = dmc.AppShell(
             dmc.Group(
                 [
                     dmc.Title("L and L Sales Dashboard", order=2, style={"marginRight": "auto"}),  # Push title to the left
-                    date_filter(),  # Place the date filter on the right
+                    #darkModeToggle(),
+                    #date_filter(),  # Place the date filter on the right
                 ],
                 align="center",  # Vertically align elements
                 justify="space-between",  # Spread elements to opposite ends
@@ -22,6 +24,7 @@ layout = dmc.AppShell(
             children=[
                 #"Navbar Content Placeholder",
                 *[dmc.Skeleton(height=28, mt="sm", animate=False) for _ in range(10)],
+                
             ],
             p="md",
             withBorder=True,
