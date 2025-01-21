@@ -4,7 +4,6 @@ from dash import Dash, dcc, html, Output, Input
 import dash_mantine_components as dmc
 from components.theme import theme
 from data_preprocessing import data_loader
-from components.theme_toggle import darkModeToggle
 from components import layout
 from pages.home import home
 from pages.wholesale.ws_home import ws_home
@@ -16,7 +15,6 @@ from pages.ecom.ec_home import ec_home
 from pages.wholesale.se_expo import se_recap
 from database import db_insert, db_setup
 import os
-import pandas as pd
 
 from components.navbar_links import generate_navbar  # Import navbar generator
 from data_preprocessing import root_processing, ecom_processing, wholesale_processing
@@ -67,61 +65,108 @@ except Exception as e:
     logging.error(f"Error during data preloading: {e}")
     # Better fallback logic
 
-# Function to set root data
-def load_root_data():
+
+
+
+
+### Data Loading / Filter Helpers
+def execute_cache(start_date=None, end_date=None):
+    """
+    Executes the caching process, ensuring that all required data is loaded and cached.
+
+    Args:
+        start_date (str, optional): The start date for filtering data (YYYY-MM-DD).
+        end_date (str, optional): The end date for filtering data (YYYY-MM-DD).
+    """
+    with app.server.app_context():  # Ensure Flask app context is active
+        if start_date or end_date:
+            logger.info(f"Executing cache with date filter: {start_date} to {end_date}")
+        else:
+            logger.info("Executing cache: Loading all data (no date filter)")
+
+        # Load and cache the data
+        load_root_data(start_date, end_date)
+        load_ecom_data()
+        load_wholesale_data()
+
+
+def load_root_data(start_date=None, end_date=None):
+    """
+    Loads root data and filters it based on the provided date range.
+
+    Args:
+        start_date (str, optional): The start date for filtering data (YYYY-MM-DD).
+        end_date (str, optional): The end date for filtering data (YYYY-MM-DD).
+    """
     try:
-        # Process root data and store it in the app's config
-        root_data = root_processing.process_root_data()  # Process the data and return results
-        app.server.config['root_data'] = root_data  # Store it in the app config
-        logging.info("Root data successfully loaded and stored.")
+        root_data = root_processing.process_root_data()
+
+        # Filter root_data if dates are provided
+        if start_date or end_date:
+            root_data = root_data[
+                (root_data["date"] >= start_date if start_date else True) &
+                (root_data["date"] <= end_date if end_date else True)
+            ]
+
+        # Store the filtered data in Flask's app config
+        app.server.config["root_data"] = root_data
+        logger.info(f"Root data successfully loaded and filtered. Rows: {len(root_data)}")
     except Exception as e:
-        logging.error(f"Failed to load root data: {e}")
+        logger.error(f"Failed to load root data: {e}")
 
 
-# Function to set eCommerce data
 def load_ecom_data():
+    """
+    Loads eCommerce data and stores it in Flask app's configuration.
+    """
     try:
-        # Ensure Flask app context is available
-        with app.server.app_context():
-            # Process eCommerce data and store it in the app's config
-            ecom_data_result = ecom_processing.process_ecom_data()  # Process the data and return results
+        ecom_data_result = ecom_processing.process_ecom_data()
 
-            # Save individual components of the eCommerce data into Flask's config
-            app.server.config['ecom_stats'] = ecom_data_result.get("stats")
-            app.server.config['ecom_merged_data'] = ecom_data_result.get("merged_data")
-            app.server.config['ecom_filtered_sale_order_line'] = ecom_data_result.get("filtered_sale_order_line")
+        # Save eCommerce data into Flask's config
+        app.server.config["ecom_stats"] = ecom_data_result.get("stats")
+        app.server.config["ecom_merged_data"] = ecom_data_result.get("merged_data")
+        app.server.config["ecom_filtered_sale_order_line"] = ecom_data_result.get("filtered_sale_order_line")
 
-            logging.info("eCommerce data successfully loaded and stored.")
+        logger.info("eCommerce data successfully loaded and stored.")
     except Exception as e:
-        logging.error(f"Failed to load eCommerce data: {e}")
+        logger.error(f"Failed to load eCommerce data: {e}")
 
-# Function to set wholesale data
+
 def load_wholesale_data():
+    """
+    Loads wholesale data and stores it in Flask app's configuration.
+    """
     try:
-        # Ensure Flask app context is available
-        with app.server.app_context():
-            # Process wholesale data and store it in the app's config
-            wholesale_data_result = wholesale_processing.process_wholesale_data()  # Process the data and return results
+        wholesale_data_result = wholesale_processing.process_wholesale_data()
 
-            # Save individual components of the wholesale data into Flask's config
-            app.server.config['wholesale_stats'] = wholesale_data_result.get("stats")
-            app.server.config['wholesale_merged_data'] = wholesale_data_result.get("merged_data")
-            app.server.config['wholesale_filtered_sale_order_line'] = wholesale_data_result.get("filtered_sale_order_line")
-            app.server.config['wholesale_delivery_distribution'] = wholesale_data_result.get("delivery_distribution")
-            app.server.config['wholesale_rep_summary'] = wholesale_data_result.get("rep_summary")
-            app.server.config['wholesale_product_profit_analysis'] = wholesale_data_result.get("product_profit_analysis")
-            app.server.config['wholesale_customer_scatter_data'] = wholesale_data_result.get("customer_scatter_data")
-            app.server.config['wholesale_geospatial_data'] = wholesale_data_result.get("geospatial_data")
-            app.server.config['wholesale_customer_segmentation_data'] = wholesale_data_result.get("customer_segmentation_data")
+        # Save wholesale data into Flask's config
+        app.server.config["wholesale_stats"] = wholesale_data_result.get("stats")
+        app.server.config["wholesale_merged_data"] = wholesale_data_result.get("merged_data")
+        app.server.config["wholesale_filtered_sale_order_line"] = wholesale_data_result.get("filtered_sale_order_line")
+        app.server.config["wholesale_delivery_distribution"] = wholesale_data_result.get("delivery_distribution")
+        app.server.config["wholesale_rep_summary"] = wholesale_data_result.get("rep_summary")
+        app.server.config["wholesale_product_profit_analysis"] = wholesale_data_result.get("product_profit_analysis")
+        app.server.config["wholesale_customer_scatter_data"] = wholesale_data_result.get("customer_scatter_data")
+        app.server.config["wholesale_geospatial_data"] = wholesale_data_result.get("geospatial_data")
+        app.server.config["wholesale_customer_segmentation_data"] = wholesale_data_result.get("customer_segmentation_data")
 
-            logging.info("Wholesale data successfully loaded and stored.")
+        logger.info("Wholesale data successfully loaded and stored.")
     except Exception as e:
-        logging.error(f"Failed to load wholesale data: {e}")
+        logger.error(f"Failed to load wholesale data: {e}")
 
-# Ensure this is called before app starts serving requests
-load_root_data()
-load_ecom_data()
-load_wholesale_data()
+
+# Execute cache during initialization
+try:
+    execute_cache()  # Execute without date filters to load all data initially
+except Exception as e:
+    logger.error(f"Error during initial cache execution: {e}")
+
+
+
+
+execute_cache()
+
+
 
 # Log app initialization
 logger.debug("Dash app initialized successfully.")
@@ -197,6 +242,7 @@ def render_page_content(pathname):
     ],
     Input("themeSwitch", "checked"),  # Listen for changes in the toggle state
 )
+
 def update_theme(is_dark_mode):
     """
     Updates the theme for the app and applies corresponding styles.
@@ -229,6 +275,59 @@ def update_theme(is_dark_mode):
         return {"theme": "light"}, light_theme, "light", header_style, text_style
 
 
+'''
+@app.callback(
+    Output("page-content", "children"),  # Re-render the page content
+    [
+        Input("date-picker-range", "start_date"),
+        Input("date-picker-range", "end_date"),
+        Input("url", "pathname"),  # Re-render only the current page
+    ],
+)
+def update_data_by_date(start_date, end_date, pathname):
+    """
+    Filters data based on the selected date range and reloads the cached data.
+
+    Args:
+        start_date (str): The selected start date in "YYYY-MM-DD" format.
+        end_date (str): The selected end date in "YYYY-MM-DD" format.
+        pathname (str): The current page pathname.
+
+    Returns:
+        Updated page content based on the filtered data.
+    """
+    try:
+        # Check if start_date or end_date is missing
+        if not start_date or not end_date:
+            logger.warning(f"Missing start_date or end_date: start_date={start_date}, end_date={end_date}")
+            # Default to rendering the page without filtering the cache
+            with app.server.app_context():
+                execute_cache()  # Load all data if no date range is provided
+
+        else:
+            logger.info(f"Callback triggered with start_date={start_date}, end_date={end_date}, pathname={pathname}")
+            with app.server.app_context():
+                execute_cache(start_date=start_date, end_date=end_date)
+
+        # Retrieve the page rendering function from the mapping
+        page_function = page_mapping.get(
+            pathname,
+            lambda: html.Div(
+                dmc.Text("404: Page not found", ta="center", c="red", size="xl"),
+                style={"textAlign": "center", "marginTop": "50px"},
+            ),
+        )
+
+        # Log the rendering action
+        logger.info(f"Rendering page for pathname: {pathname}")
+        return page_function()
+    except Exception as e:
+        logger.error(f"Error in update_data_by_date callback: {e}")
+        return html.Div(
+            "An error occurred while updating the page. Please check the logs.", style={"color": "red"}
+        )
+
+'''
 
 
 

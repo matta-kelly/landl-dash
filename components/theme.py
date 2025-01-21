@@ -2,6 +2,7 @@ from dash_mantine_components import DEFAULT_THEME
 
 # Define the custom theme object
 theme = {
+    **DEFAULT_THEME,
     "fontFamily": "'Roboto', sans-serif",
     "fontFamilyMonospace": "'Courier New', monospace",
     "primaryColor": "indigo",

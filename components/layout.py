@@ -9,8 +9,15 @@ layout = dmc.AppShell(
             dmc.Group(
                 [
                     dmc.Title("L and L Sales Dashboard", order=2, style={"marginRight": "auto"}),  # Push title to the left
+                    dmc.Text(
+                        "Last Updated: 2025-01-21 @ 8:30AM PST",  # Manually set the last updated date
+                        id="last-update",
+                        size="sm",
+                        style={"color": "black", "marginRight": "25px"},  # Styling for the text
+                    ),
                     #darkModeToggle(),
                     #date_filter(),  # Place the date filter on the right
+                    
                 ],
                 align="center",  # Vertically align elements
                 justify="space-between",  # Spread elements to opposite ends
