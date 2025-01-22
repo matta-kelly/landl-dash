@@ -38,6 +38,7 @@ def generate_navbar(pathname):
                 opened=True,
                 children=[
                     dmc.NavLink(label="Home", href="/ecom"),
+                    dmc.NavLink(label="Collection", href="/ecom/collection"),
                 ],
             ),
         ]

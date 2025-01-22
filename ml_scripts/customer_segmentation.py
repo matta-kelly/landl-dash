@@ -108,7 +108,7 @@ def perform_kmeans_clustering(data, max_clusters=10, random_state=42):
     return results
 
 # Standalone Testing
-def compute_customer_segmentation(wholesale_data=None, testing=True):
+def compute_customer_segmentation(wholesale_data=None, testing=False):
     """
     Computes customer segmentation by clustering based on engineered features.
 
@@ -147,7 +147,7 @@ def compute_customer_segmentation(wholesale_data=None, testing=True):
 if __name__ == "__main__":
     try:
         # Example for testing the standalone script
-        customer_segmentation_data = compute_customer_segmentation(testing=True)  # Ensure testing is True
+        customer_segmentation_data = compute_customer_segmentation(testing=False)  # Ensure testing is True
         customer_segmentation_data.to_csv("./data/customer_segmentation.csv", index=False)
         print("Customer segmentation data saved to customer_segmentation.csv.")
     except Exception as e:

@@ -48,7 +48,8 @@ def merge_master_sku():
         sale_order_line.*, 
         master_sku.spsu25_status, 
         master_sku.category_group, 
-        master_sku.sku_parent
+        master_sku.sku_parent,
+        master_sku.category
     FROM sale_order_line
     LEFT JOIN master_sku 
         ON sale_order_line.sku = master_sku.sku;

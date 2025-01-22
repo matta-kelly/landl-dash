@@ -12,6 +12,7 @@ from pages.wholesale.ws_rep_view import ws_rep_view
 from pages.wholesale.ws_customer_eval import ws_customer_eval
 from pages.wholesale.ws_product import ws_product
 from pages.ecom.ec_home import ec_home
+from pages.ecom.ec_collection import ec_collection
 from pages.wholesale.se_expo import se_recap
 from database import db_insert, db_setup
 import os
@@ -126,6 +127,8 @@ def load_ecom_data():
         app.server.config["ecom_stats"] = ecom_data_result.get("stats")
         app.server.config["ecom_merged_data"] = ecom_data_result.get("merged_data")
         app.server.config["ecom_filtered_sale_order_line"] = ecom_data_result.get("filtered_sale_order_line")
+        app.server.config['ec_collection_data'] = ecom_data_result.get("ec_collection_data")
+        
 
         logger.info("eCommerce data successfully loaded and stored.")
     except Exception as e:
@@ -211,6 +214,7 @@ page_mapping = {
     "/wholesale/customer-eval": ws_customer_eval,
     "/wholesale/se": se_recap,
     "/ecom": ec_home,
+    "/ecom/collection": ec_collection,
 }
 
 # Callback for dynamic page rendering

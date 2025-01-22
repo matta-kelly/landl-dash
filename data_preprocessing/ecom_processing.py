@@ -57,6 +57,51 @@ def compute_statistics(filtered_data):
         "top_selling_product": top_selling_product,
     }
 
+# group Collection data
+def process_collection_data(ecom_data):
+    """
+    Processes eCommerce data to compute aggregated metrics by collection.
+
+    Args:
+        ecom_data (pd.DataFrame): The filtered eCommerce data.
+
+    Returns:
+        pd.DataFrame: Aggregated DataFrame with Quantity Sold, Total Revenue,
+                      Avg Revenue per Unit, Number of Orders, and Category by Collection.
+    """
+    if ecom_data.empty:
+        raise ValueError("The eCommerce data is empty. Cannot process collection data.")
+
+    # Step 1: Count unique orders per Collection
+    order_counts = (
+        ecom_data.groupby("Collection")["Order Reference"]
+        .nunique()
+        .reset_index()
+        .rename(columns={"Order Reference": "Number of Orders"})
+    )
+
+    # Step 2: Group data by Collection and calculate total revenue, quantity sold, and retain Category
+    collection_data = ecom_data.groupby("Collection", as_index=False).agg({
+        "Subtotal": "sum",  # Total revenue
+        "Quantity": "sum",  # Total quantity sold
+        "Category": "first",  # Retain the first non-null Category for each Collection
+    })
+
+    # Step 3: Merge the order counts into the aggregated collection data
+    collection_data = collection_data.merge(order_counts, on="Collection", how="left")
+
+    # Step 4: Add the original Order Reference column (without modification)
+    # Ensure we keep one unique order reference per line
+    collection_data["Order Reference"] = ecom_data["Order Reference"]
+
+    # Step 5: Add additional metrics (e.g., average revenue per unit)
+    collection_data["Avg Revenue per Unit"] = (
+        collection_data["Subtotal"] / collection_data["Quantity"]
+    ).fillna(0)
+
+    return collection_data
+
+
 def process_ecom_data():
     """
     Process eCommerce-specific data, compute statistics, and return DataFrames and stats.
@@ -66,11 +111,17 @@ def process_ecom_data():
     if not root_data:
         raise ValueError("Root data not available in Flask config.")
 
-    # Access the merged datae
+    # Access the merged data
     merged_data = root_data['merged_data']
 
     # Filter for eCommerce-specific sales
     ecom_data = filter_ecom_data(merged_data)
+
+    # Compute statistics
+    stats = compute_statistics(ecom_data)
+
+    # Process collection data for analysis
+    ec_collection_data = process_collection_data(ecom_data)
 
     # Save the filtered eCommerce data to a CSV file for inspection
     try:
@@ -79,15 +130,16 @@ def process_ecom_data():
     except Exception as e:
         print(f"Error saving e-commerce data to CSV: {e}")
 
-    # Compute statistics
-    stats = compute_statistics(ecom_data)
+    
 
     # Return structured data
     return {
         "stats": stats,
         "merged_data": ecom_data,  # Filtered eCommerce data
+        "ec_collection_data": ec_collection_data,  # Aggregated data by collection
         "filtered_sale_order_line": ecom_data,
     }
+
 
 
 if __name__ == "__main__":
