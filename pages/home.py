@@ -191,7 +191,7 @@ def home():
                                     html.Td(f"${row['Subtotal']:,.2f}"),
                                 ]
                             )
-                            for _, row in clothing_data_grouped.sort_values(by="Subtotal", ascending=False).head(20).iterrows()
+                            for _, row in clothing_data_grouped.sort_values(by="Subtotal", ascending=False).head(30).iterrows()
                         ]
                     ),
                 ],
@@ -223,7 +223,7 @@ def home():
                                     html.Td(f"${row['Subtotal']:,.2f}"),
                                 ]
                             )
-                            for _, row in jewelry_data_grouped.sort_values(by="Subtotal", ascending=False).head(20).iterrows()
+                            for _, row in jewelry_data_grouped.sort_values(by="Subtotal", ascending=False).head(30).iterrows()
                         ]
                     ),
                 ],
@@ -255,7 +255,7 @@ def home():
                                     html.Td(f"${row['Subtotal']:,.2f}"),
                                 ]
                             )
-                            for _, row in fabric_data_grouped.sort_values(by="Subtotal", ascending=False).head(20).iterrows()
+                            for _, row in fabric_data_grouped.sort_values(by="Subtotal", ascending=False).head(30).iterrows()
                         ]
                     ),
                 ],
