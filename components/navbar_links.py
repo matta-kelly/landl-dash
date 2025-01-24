@@ -11,6 +11,17 @@ def generate_navbar(pathname):
         list: A list of `dmc.NavLink` components.
     """
 
+    def get_overview_links():
+        return dmc.NavLink(
+            label="Overview",
+            href="/overview",
+            opened=pathname.startswith("/overview") or pathname == "/",
+            children=[
+                dmc.NavLink(label="Home", href="/overview"),
+                dmc.NavLink(label="Sales Channel Comparison", href="/overview/channel-comparison"),
+            ],
+        )
+
     def get_wholesale_links():
         return dmc.NavLink(
             label="Wholesale",
@@ -45,36 +56,15 @@ def generate_navbar(pathname):
             children=[
                 dmc.NavLink(label="Home", href="/faire"),
                 dmc.NavLink(label="Winter Market", href="/faire/winter-market"),
-
             ],
         )
 
+    # Always include all top-level links to display the full navigation menu
     nav_links = [
-        dmc.NavLink(label="Home", href="/", childrenOffset=28),
+        get_overview_links(),
+        get_wholesale_links(),
+        get_ecom_links(),
+        get_faire_links(),
     ]
-
-    # Add Wholesale links if pathname starts with /wholesale
-    if pathname.startswith("/wholesale"):
-        nav_links.append(get_wholesale_links())
-        nav_links.append(get_ecom_links())
-        nav_links.append(get_faire_links())
-
-    # Add Ecom links if pathname starts with /ecom
-    elif pathname.startswith("/ecom"):
-        nav_links.append(get_wholesale_links())
-        nav_links.append(get_ecom_links())
-        nav_links.append(get_faire_links())
-
-    # Add Faire links if pathname starts with /faire
-    elif pathname.startswith("/faire"):
-        nav_links.append(get_wholesale_links())
-        nav_links.append(get_ecom_links())
-        nav_links.append(get_faire_links())
-
-    # Default: Add Wholesale, Ecom, and Faire links
-    else:
-        nav_links.append(get_wholesale_links())
-        nav_links.append(get_ecom_links())
-        nav_links.append(get_faire_links())
 
     return nav_links

@@ -5,7 +5,8 @@ import dash_mantine_components as dmc
 from components.theme import theme
 from data_preprocessing import data_loader
 from components import layout
-from pages.home import home
+from pages.overview.home import home
+from pages.overview.channel_comparison import channel
 from pages.wholesale.ws_home import ws_home
 from pages.wholesale.ws_shipping_fufillment import ws_shipping_fulfillment
 from pages.wholesale.ws_rep_view import ws_rep_view
@@ -234,20 +235,28 @@ def update_navbar(pathname):
 
 # Page path-to-function mapping
 page_mapping = {
-    "/": home,
-    "/home": home,
+    "/": home,  # Root redirects to Overview's Home
+    "/overview": home,  # Overview's default page is Home
+    "/overview/channel-comparison": channel,  # Channel Comparison page
+
+    # Wholesale pages
     "/wholesale": ws_home,
     "/wholesale/shipping": ws_shipping_fulfillment,
     "/wholesale/product": ws_product,
     "/wholesale/rep-view": ws_rep_view,
     "/wholesale/customer-eval": ws_customer_eval,
     "/wholesale/se": se_recap,
+
+    # Ecom pages
     "/ecom": ec_home,
     "/ecom/collection": ec_collection,
+
+    # Faire pages
     "/faire": faire_home,
     "/faire/winter-market": faire_winter,
-
 }
+
+
 
 # Callback for dynamic page rendering
 @app.callback(

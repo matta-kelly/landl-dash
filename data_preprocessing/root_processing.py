@@ -34,7 +34,7 @@ def query_db(query, params=None):
         logger.error(f"Failed to execute query: {e}")
         raise
 
-
+# Home page Content
 def merge_master_sku():
     """
     Merge `sale_order_line` with `master_sku` using an SQL LEFT JOIN.
@@ -136,12 +136,98 @@ def compute_statistics(merged_data):
     return stats
 
 
+### - Overview pages
+def channel_comparison(merged_data):
+    """
+    Create DataFrames for the top 10 parent SKUs and top 10 collections for eCommerce, Wholesale, and Faire channels.
+
+    Args:
+        merged_data (pd.DataFrame): The merged data containing all sales data.
+
+    Returns:
+        dict: A dictionary containing six DataFrames:
+            - 'ecom_top_10': Top 10 parent SKUs for eCommerce
+            - 'wholesale_top_10': Top 10 parent SKUs for Wholesale
+            - 'faire_top_10': Top 10 parent SKUs for Faire
+            - 'ecom_top_collections': Top 10 collections for eCommerce
+            - 'wholesale_top_collections': Top 10 collections for Wholesale
+            - 'faire_top_collections': Top 10 collections for Faire
+    """
+    # Filter data by Sales Team
+    ecom_data = merged_data[merged_data["Sales Team"] == "Shopify"]
+    wholesale_data = merged_data[merged_data["Sales Team"] == "Wholesale"]
+    faire_data = merged_data[merged_data["Sales Team"] == "Faire"]
+
+    # Top 10 parent SKUs for each channel
+    ecom_top_10 = (
+        ecom_data.groupby("SKU (Parent)")
+        .agg({"Quantity": "sum", "Subtotal": "sum"})
+        .sort_values(by="Subtotal", ascending=False)
+        .head(10)
+        .reset_index()
+    )
+
+    wholesale_top_10 = (
+        wholesale_data.groupby("SKU (Parent)")
+        .agg({"Quantity": "sum", "Subtotal": "sum"})
+        .sort_values(by="Subtotal", ascending=False)
+        .head(10)
+        .reset_index()
+    )
+
+    faire_top_10 = (
+        faire_data.groupby("SKU (Parent)")
+        .agg({"Quantity": "sum", "Subtotal": "sum"})
+        .sort_values(by="Subtotal", ascending=False)
+        .head(10)
+        .reset_index()
+    )
+
+    # Top 10 collections for each channel
+    ecom_top_collections = (
+        ecom_data.groupby("Collection")
+        .agg({"Quantity": "sum", "Subtotal": "sum"})
+        .sort_values(by="Subtotal", ascending=False)
+        .head(10)
+        .reset_index()
+    )
+
+    wholesale_top_collections = (
+        wholesale_data.groupby("Collection")
+        .agg({"Quantity": "sum", "Subtotal": "sum"})
+        .sort_values(by="Subtotal", ascending=False)
+        .head(10)
+        .reset_index()
+    )
+
+    faire_top_collections = (
+        faire_data.groupby("Collection")
+        .agg({"Quantity": "sum", "Subtotal": "sum"})
+        .sort_values(by="Subtotal", ascending=False)
+        .head(10)
+        .reset_index()
+    )
+
+    return {
+        # Top 10 parent SKUs
+        "ecom_top_10": ecom_top_10,
+        "wholesale_top_10": wholesale_top_10,
+        "faire_top_10": faire_top_10,
+        # Top 10 collections
+        "ecom_top_collections": ecom_top_collections,
+        "wholesale_top_collections": wholesale_top_collections,
+        "faire_top_collections": faire_top_collections,
+    }
+
+
+
+# - Main processing loop
 def process_root_data():
     """
     Load, process, and compute statistics. This function merges data and calculates the required statistics.
     
     Returns:
-        dict: A dictionary containing the computed statistics and merged data.
+        dict: A dictionary containing the computed statistics, merged data, and channel comparisons.
     """
     try:
         # 1. Merge sale_order_line with master_sku
@@ -156,10 +242,14 @@ def process_root_data():
         # 3. Compute statistics based on the merged data
         stats = compute_statistics(merged_data)
 
-        # 4. Return a dictionary containing the statistics and merged data
+        # 4. Generate channel comparison DataFrames
+        channel_comparison_data = channel_comparison(merged_data)
+
+        # 5. Return a dictionary containing the statistics, merged data, and channel comparison data
         return {
             "stats": stats,
-            "merged_data": merged_data
+            "merged_data": merged_data,
+            "channel_comparison": channel_comparison_data,
         }
 
     except Exception as e:
@@ -167,12 +257,3 @@ def process_root_data():
         raise
 
 
-if __name__ == "__main__":
-    # Process data and retrieve results
-    results = process_root_data()
-
-    # Display results for debugging
-    print("Statistics:")
-    print(results["stats"])
-    print("\nMerged Data Preview:")
-    print(results["merged_data"].head())  # Display first 5 rows for preview
