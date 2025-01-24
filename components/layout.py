@@ -10,7 +10,7 @@ layout = dmc.AppShell(
                 [
                     dmc.Title("L and L Sales Dashboard", order=2, style={"marginRight": "auto"}),  # Push title to the left
                     dmc.Text(
-                        "Last Updated: 2025-01-22 @ 8:15AM PST",  # Manually set the last updated date
+                        "Last Updated: 2025-01-24 @ 10:15AM PST",  # Manually set the last updated date
                         id="last-update",
                         size="sm",
                         style={"color": "black", "marginRight": "25px"},  # Styling for the text

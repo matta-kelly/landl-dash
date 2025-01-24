@@ -134,7 +134,7 @@ def compute_statistics(filtered_sale_order_line):
 
     # Separate sales and quotations
     sales_orders = filtered_sale_order_line[filtered_sale_order_line["Order Status"] == "sale"]
-    quotation_orders = filtered_sale_order_line[filtered_sale_order_line["Order Status"] != "sale"]
+    quotation_orders = filtered_sale_order_line[filtered_sale_order_line["Order Status"] == "draft"]
 
     # Debugging: Log counts after filtering
     print("Number of Sales Orders:", sales_orders.shape[0])
@@ -158,13 +158,13 @@ def compute_statistics(filtered_sale_order_line):
     avg_unit_revenue = total_revenue / total_units if total_units > 0 else 0.0
 
     return {
-        "total_orders": total_orders,
-        "total_units": total_units,
-        "total_cost": total_cost,
-        "total_revenue": total_revenue,
-        "avg_unit_revenue": avg_unit_revenue,
-        "total_quotations": total_quotations,
-        "revenue_quotations": revenue_quotations,
+        "se_total_orders": total_orders,
+        "se_total_units": total_units,
+        "se_total_cost": total_cost,
+        "se_total_revenue": total_revenue,
+        "se_avg_unit_revenue": avg_unit_revenue,
+        "se_total_quotations": total_quotations,
+        "se_revenue_quotations": revenue_quotations,
     }
 
 # Sales by Rep

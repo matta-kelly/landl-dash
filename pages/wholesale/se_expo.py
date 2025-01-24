@@ -57,7 +57,16 @@ def se_recap():
             dmc.Card(
                 children=[
                     dmc.Text("Total Orders (Sales)", fw=500, size="lg"),
-                    dmc.Text(f"{stats['total_orders']:,}", size="xl", c="blue"),
+                    dmc.Text(f"{stats['se_total_orders']:,}", size="xl", c="blue"),
+                ],
+                withBorder=True,
+                shadow="sm",
+                padding="md",
+            ),
+            dmc.Card(
+                children=[
+                    dmc.Text("Total Orders (Quotations)", fw=500, size="lg"),
+                    dmc.Text(f"{stats['se_total_quotations']:,}", size="xl", c="blue"),
                 ],
                 withBorder=True,
                 shadow="sm",
@@ -66,7 +75,7 @@ def se_recap():
             dmc.Card(
                 children=[
                     dmc.Text("Total Units Sold", fw=500, size="lg"),
-                    dmc.Text(f"{stats['total_units']:,}", size="xl", c="green"),
+                    dmc.Text(f"{stats['se_total_units']:,}", size="xl", c="green"),
                 ],
                 withBorder=True,
                 shadow="sm",
@@ -75,7 +84,7 @@ def se_recap():
             dmc.Card(
                 children=[
                     dmc.Text("Total Revenue (Sales)", fw=500, size="lg"),
-                    dmc.Text(f"${stats['total_revenue']:,.2f}", size="xl", c="orange"),
+                    dmc.Text(f"${stats['se_total_revenue']:,.2f}", size="xl", c="orange"),
                 ],
                 withBorder=True,
                 shadow="sm",
@@ -84,7 +93,7 @@ def se_recap():
             dmc.Card(
                 children=[
                     dmc.Text("Average Unit Retail (AUR)", fw=500, size="lg"),
-                    dmc.Text(f"${stats['avg_unit_revenue']:,.2f}", size="xl", c="purple"),
+                    dmc.Text(f"${stats['se_avg_unit_revenue']:,.2f}", size="xl", c="purple"),
                 ],
                 withBorder=True,
                 shadow="sm",
@@ -93,7 +102,7 @@ def se_recap():
             dmc.Card(
                 children=[
                     dmc.Text("Total Quotations", fw=500, size="lg"),
-                    dmc.Text(f"{stats['total_quotations']:,}", size="xl", c="cyan"),
+                    dmc.Text(f"{stats['se_total_quotations']:,}", size="xl", c="cyan"),
                 ],
                 withBorder=True,
                 shadow="sm",
@@ -102,7 +111,7 @@ def se_recap():
             dmc.Card(
                 children=[
                     dmc.Text("Revenue in Quotations", fw=500, size="lg"),
-                    dmc.Text(f"${stats['revenue_quotations']:,.2f}", size="xl", c="pink"),
+                    dmc.Text(f"${stats['se_revenue_quotations']:,.2f}", size="xl", c="pink"),
                 ],
                 withBorder=True,
                 shadow="sm",

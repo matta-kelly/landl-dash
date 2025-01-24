@@ -27,11 +27,12 @@ def compute_statistics(filtered_sale_order_line):
         filtered_sale_order_line (pd.DataFrame): The filtered sale_order_line DataFrame.
 
     Returns:
-        dict: Dictionary of computed statistics.
+        dict: Dictionary of computed statistics.x
     """
     if filtered_sale_order_line.empty:
         return {
-            "total_orders": 0,
+            "total_orders_sold": 0,
+            "total_orders_quotation": 0,
             "total_revenue_sold": 0.0,
             "total_revenue_quotation": 0.0,
             "avg_order_value": 0.0,
@@ -39,7 +40,13 @@ def compute_statistics(filtered_sale_order_line):
         }
 
     # Total orders (unique order references)
-    total_orders = filtered_sale_order_line["Order Reference"].nunique()
+    total_orders_sold = filtered_sale_order_line[
+        filtered_sale_order_line["Order Status"] == "sale"
+    ]["Order Reference"].nunique()
+    
+    total_orders_quotation = filtered_sale_order_line[
+        filtered_sale_order_line["Order Status"] == "draft"
+    ]["Order Reference"].nunique()
 
     # Total revenue for "sale" status
     total_revenue_sold = filtered_sale_order_line[
@@ -66,7 +73,8 @@ def compute_statistics(filtered_sale_order_line):
     )
 
     return {
-        "total_orders": total_orders,
+        "total_orders_sold": total_orders_sold,
+        "total_orders_quotation": total_orders_quotation,
         "total_revenue_sold": total_revenue_sold,
         "total_revenue_quotation": total_revenue_quotation,
         "avg_order_value": avg_order_value,

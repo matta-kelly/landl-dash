@@ -14,11 +14,16 @@ from pages.wholesale.ws_product import ws_product
 from pages.ecom.ec_home import ec_home
 from pages.ecom.ec_collection import ec_collection
 from pages.wholesale.se_expo import se_recap
+from pages.faire.faire_home import faire_home
+from pages.faire.faire_winter import faire_winter
+
+
+
 from database import db_insert, db_setup
 import os
 
 from components.navbar_links import generate_navbar  # Import navbar generator
-from data_preprocessing import root_processing, ecom_processing, wholesale_processing
+from data_preprocessing import root_processing, ecom_processing, wholesale_processing, faire_processing
 
 # Disable file watching for Dash
 os.environ["DASH_NO_DEV_TOOLS"] = "1"
@@ -89,6 +94,7 @@ def execute_cache(start_date=None, end_date=None):
         load_root_data(start_date, end_date)
         load_ecom_data()
         load_wholesale_data()
+        load_faire_data()
 
 
 def load_root_data(start_date=None, end_date=None):
@@ -133,6 +139,29 @@ def load_ecom_data():
         logger.info("eCommerce data successfully loaded and stored.")
     except Exception as e:
         logger.error(f"Failed to load eCommerce data: {e}")
+
+
+def load_faire_data():
+    """
+    Loads Faire data and stores it in Flask app's configuration, including winter-specific data and statistics.
+    """
+    try:
+        # Process Faire data
+        faire_data_result = faire_processing.process_faire_data()
+
+        # Save Faire data and stats into Flask's config
+        app.server.config["faire_stats"] = faire_data_result.get("stats")
+        app.server.config["faire_merged_data"] = faire_data_result.get("faire_data")
+        app.server.config["faire_filtered_sale_order_line"] = faire_data_result.get("filtered_sale_order_line")
+        
+        # Save Winter Faire data and stats into Flask's config
+        app.server.config["winter_stats"] = faire_data_result.get("winter_stats")
+        app.server.config["winter_data"] = faire_data_result.get("winter_data")
+
+        logger.info("Faire data and Winter Faire data successfully loaded and stored.")
+    except Exception as e:
+        logger.error(f"Failed to load Faire data: {e}")
+
 
 
 def load_wholesale_data():
@@ -215,6 +244,9 @@ page_mapping = {
     "/wholesale/se": se_recap,
     "/ecom": ec_home,
     "/ecom/collection": ec_collection,
+    "/faire": faire_home,
+    "/faire/winter-market": faire_winter,
+
 }
 
 # Callback for dynamic page rendering

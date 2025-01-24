@@ -97,7 +97,8 @@ def rename_columns(merged_data_df):
         "spsu25_status": "SPSU25 Status",
         "category_group": "Category Group",
         "category": "Category",
-        "sku_parent": "SKU (Parent)"
+        "sku_parent": "SKU (Parent)",
+        "sales_date": "Sales Date",
     }, inplace=True)
 
     return merged_data_df
