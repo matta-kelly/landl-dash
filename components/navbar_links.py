@@ -19,6 +19,7 @@ def generate_navbar(pathname):
             children=[
                 dmc.NavLink(label="Home", href="/overview"),
                 dmc.NavLink(label="Sales Channel Comparison", href="/overview/channel-comparison"),
+                dmc.NavLink(label="Listings Overview", href="/overview/listings"),
             ],
         )
 

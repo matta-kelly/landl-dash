@@ -136,6 +136,46 @@ def compute_statistics(merged_data):
     return stats
 
 
+def compute_sales_team_statistics(merged_data):
+    """
+    Compute statistics grouped by Sales Team, excluding the 'Website' channel, 
+    including total revenue for sales and quotations, total orders in sales, 
+    and total orders in quotations.
+
+    Args:
+        merged_data (pd.DataFrame): The merged data to compute statistics from.
+
+    Returns:
+        pd.DataFrame: A DataFrame with statistics grouped by Sales Team.
+    """
+    sales_team_stats = []
+
+    # Get the list of unique Sales Teams, excluding 'Website'
+    sales_teams = merged_data["Sales Team"].unique()
+    sales_teams = [team for team in sales_teams if team != "Website"]
+
+    for team in sales_teams:
+        team_data = merged_data[merged_data["Sales Team"] == team]
+
+        total_revenue_sales = team_data[team_data["Order Status"] == "sale"]["Subtotal"].sum()
+        total_orders_sales = team_data[team_data["Order Status"] == "sale"]["Order Reference"].nunique()
+        total_revenue_quotations = team_data[team_data["Order Status"] == "draft"]["Subtotal"].sum()
+        total_orders_quotations = team_data[team_data["Order Status"] == "draft"]["Order Reference"].nunique()
+
+        sales_team_stats.append({
+            "Sales Team": team,
+            "total_revenue_sales": total_revenue_sales,
+            "total_orders_sales": total_orders_sales,
+            "total_revenue_quotations": total_revenue_quotations,
+            "total_orders_quotations": total_orders_quotations,
+        })
+
+
+    # Convert the list of dictionaries to a DataFrame
+    sales_team_stats_df = pd.DataFrame(sales_team_stats)
+
+    return sales_team_stats_df
+
 ### - Overview pages
 def channel_comparison(merged_data):
     """
@@ -245,11 +285,14 @@ def process_root_data():
         # 4. Generate channel comparison DataFrames
         channel_comparison_data = channel_comparison(merged_data)
 
+        channel_stats = compute_sales_team_statistics(merged_data)
+
         # 5. Return a dictionary containing the statistics, merged data, and channel comparison data
         return {
             "stats": stats,
             "merged_data": merged_data,
             "channel_comparison": channel_comparison_data,
+            "channel_stats": channel_stats,
         }
 
     except Exception as e:

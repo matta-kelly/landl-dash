@@ -7,6 +7,7 @@ from data_preprocessing import data_loader
 from components import layout
 from pages.overview.home import home
 from pages.overview.channel_comparison import channel
+from pages.overview.listings import listing
 from pages.wholesale.ws_home import ws_home
 from pages.wholesale.ws_shipping_fufillment import ws_shipping_fulfillment
 from pages.wholesale.ws_rep_view import ws_rep_view
@@ -238,6 +239,7 @@ page_mapping = {
     "/": home,  # Root redirects to Overview's Home
     "/overview": home,  # Overview's default page is Home
     "/overview/channel-comparison": channel,  # Channel Comparison page
+    "/overview/listings": listing,  
 
     # Wholesale pages
     "/wholesale": ws_home,

@@ -2,7 +2,7 @@ import pandas as pd
 from flask import current_app
 
 # Function to filter Faire-specific sales
-def filter_faire_data(merged_data):
+def filter_faire_data(merged_data, faire_orders):
     """
     Filter the merged data for Faire-specific sales (Sales Team = 'Faire').
 
@@ -12,11 +12,17 @@ def filter_faire_data(merged_data):
     Returns:
         pd.DataFrame: Filtered DataFrame for Faire sales.
     """
-    if "Sales Team" not in merged_data.columns:
-        raise KeyError("'Sales Team' column is missing from the merged data.")
-    
-    faire_data = merged_data[merged_data["Sales Team"] == "Faire"]
-    return faire_data
+    if merged_data.empty or faire_orders.empty:
+        return pd.DataFrame()
+
+    # Ensure the column names align
+    faire_orders = faire_orders.rename(columns=lambda x: x.strip())  # Strip whitespace from columns
+    faire_order_references = faire_orders["Order Reference"].unique()  # List of relevant order references
+
+    # Filter merged_data for these orders
+    filtered = merged_data[merged_data["Order Reference"].isin(faire_order_references)]
+
+    return filtered
 
 # Function to filter data for a specific date range (Winter Faire)
 def filter_winter_data(faire_data):
@@ -41,7 +47,7 @@ def filter_winter_data(faire_data):
     # Filter for the specified date range
     winter_data = faire_data[
         (faire_data["Sales Date"] >= "2025-01-21") &
-        (faire_data["Sales Date"] <= "2025-01-24")
+        (faire_data["Sales Date"] < "2025-01-25")
     ]
     return winter_data
 
@@ -93,12 +99,14 @@ def process_faire_data():
     root_data = current_app.config['root_data']
     if not root_data:
         raise ValueError("Root data not available in Flask config.")
+    
+    faire_orders = pd.read_csv('./data/f-sales-orders.csv')
 
     # Access the merged data
     merged_data = root_data['merged_data']
 
     # Filter for Faire-specific sales
-    faire_data = filter_faire_data(merged_data)
+    faire_data = filter_faire_data(merged_data, faire_orders)
 
     # Filter for Winter Faire data
     winter_data = filter_winter_data(faire_data)

@@ -14,7 +14,9 @@ DATA_FOLDER = './data'
 # File names
 FILES = {
     "sale_order_line": "sale-order-line.csv",
-    "master_sku": "master-sku.csv"
+    "master_sku": "master-sku.csv",
+    "listings": "listings.csv",
+    "listing_items": "listing-items.csv",
 }
 
 # Global state for cached/preloaded data

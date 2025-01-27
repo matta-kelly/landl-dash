@@ -133,7 +133,9 @@ def channel():
     return html.Div(
         [
             html.H1("Channel Comparison", style={"textAlign": "center"}),
+            html.H2("Product: (Parent SKU)", style={"textAlign": "center"}),
             dmc.Card(html.Div(sku_table, style={"overflowX": "auto"})),
+            html.H2("Collection", style={"textAlign": "center"}),
             dmc.Card(html.Div(collection_table, style={"overflowX": "auto"})),
         ]
     )
