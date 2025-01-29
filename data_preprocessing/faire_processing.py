@@ -15,7 +15,7 @@ def filter_faire_data(merged_data, faire_orders):
     if merged_data.empty or faire_orders.empty:
         return pd.DataFrame()
 
-    # Ensure the column names align
+    # Ensure the column names alignn
     faire_orders = faire_orders.rename(columns=lambda x: x.strip())  # Strip whitespace from columns
     faire_order_references = faire_orders["Order Reference"].unique()  # List of relevant order references
 

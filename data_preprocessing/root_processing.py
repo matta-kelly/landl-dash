@@ -136,45 +136,76 @@ def compute_statistics(merged_data):
     return stats
 
 
-def compute_sales_team_statistics(merged_data):
+def compute_sales_team_revenue_by_week(merged_data):
     """
-    Compute statistics grouped by Sales Team, excluding the 'Website' channel, 
-    including total revenue for sales and quotations, total orders in sales, 
-    and total orders in quotations.
-
-    Args:
-        merged_data (pd.DataFrame): The merged data to compute statistics from.
-
-    Returns:
-        pd.DataFrame: A DataFrame with statistics grouped by Sales Team.
+    Returns a DataFrame of *weekly* total revenue (Subtotal) by Sales Team,
+    excluding draft/quotation logic, ensuring Faire & Wholesale orders don't overlap.
+    
+    Columns returned: ["Sales Week", "Sales Team", "Subtotal"].
+      - "Sales Week" is the start-of-week date (Sunday-based by default).
     """
-    sales_team_stats = []
+    # --- 1) Load Faire references, identify overlap ---
+    faire_orders = pd.read_csv("./data/f-sales-orders.csv")
+    faire_orders = faire_orders.rename(columns=lambda x: x.strip())
+    faire_refs = set(faire_orders["Order Reference"].unique())
 
-    # Get the list of unique Sales Teams, excluding 'Website'
-    sales_teams = merged_data["Sales Team"].unique()
-    sales_teams = [team for team in sales_teams if team != "Website"]
+    # --- 2) Separate out Faire (sale only) ---
+    faire_data = merged_data[
+        (merged_data["Order Reference"].isin(faire_refs)) &
+        (merged_data["Order Status"] == "sale")
+    ]
+    faire_grouped = faire_data.groupby("Sales Date", as_index=False)["Subtotal"].sum()
+    faire_grouped["Sales Team"] = "Faire"
 
-    for team in sales_teams:
-        team_data = merged_data[merged_data["Sales Team"] == team]
+    # --- 3) Wholesale (exclude Faire overlap) ---
+    wholesale_data = merged_data[
+        (merged_data["Sales Team"] == "Wholesale") &
+        (~merged_data["Order Reference"].isin(faire_refs)) &
+        (merged_data["Order Status"] == "sale")
+    ]
+    wholesale_grouped = wholesale_data.groupby("Sales Date", as_index=False)["Subtotal"].sum()
+    wholesale_grouped["Sales Team"] = "Wholesale"
 
-        total_revenue_sales = team_data[team_data["Order Status"] == "sale"]["Subtotal"].sum()
-        total_orders_sales = team_data[team_data["Order Status"] == "sale"]["Order Reference"].nunique()
-        total_revenue_quotations = team_data[team_data["Order Status"] == "draft"]["Subtotal"].sum()
-        total_orders_quotations = team_data[team_data["Order Status"] == "draft"]["Order Reference"].nunique()
+    # --- 4) All other teams (excluding Website, Wholesale, Faire) ---
+    all_teams = merged_data["Sales Team"].dropna().unique()
+    other_teams = [t for t in all_teams if t not in ["Website", "Wholesale", "Faire"]]
 
-        sales_team_stats.append({
-            "Sales Team": team,
-            "total_revenue_sales": total_revenue_sales,
-            "total_orders_sales": total_orders_sales,
-            "total_revenue_quotations": total_revenue_quotations,
-            "total_orders_quotations": total_orders_quotations,
-        })
+    df_list = [faire_grouped, wholesale_grouped]
+
+    for team in other_teams:
+        team_data = merged_data[
+            (merged_data["Sales Team"] == team) &
+            (merged_data["Order Status"] == "sale")
+        ]
+        grouped = team_data.groupby("Sales Date", as_index=False)["Subtotal"].sum()
+        grouped["Sales Team"] = team
+        df_list.append(grouped)
+
+    # Combine all channels into a single DataFrame
+    channel_stats_dates = pd.concat(df_list, ignore_index=True)
+
+    # Convert Sales Date to proper datetime
+    channel_stats_dates["Sales Date"] = pd.to_datetime(channel_stats_dates["Sales Date"], errors="coerce")
+
+    # --- 5) Filter out future dates (past "today") ---
+    today = pd.to_datetime("today").normalize()
+    channel_stats_dates = channel_stats_dates[channel_stats_dates["Sales Date"] <= today]
+
+    # --- 6) Convert daily dates to weekly buckets ---
+    #    (Sunday-based by default, but you can customize with "W-MON" if needed)
+    channel_stats_dates["Sales Week"] = channel_stats_dates["Sales Date"].dt.to_period("W")
+    channel_stats_dates["Sales Week"] = channel_stats_dates["Sales Week"].apply(lambda r: r.start_time)
+
+    # --- 7) Group by (Sales Week, Sales Team), summing Subtotal ---
+    weekly_revenue = (
+        channel_stats_dates
+        .groupby(["Sales Week", "Sales Team"], as_index=False)["Subtotal"]
+        .sum()
+    )
+
+    return weekly_revenue
 
 
-    # Convert the list of dictionaries to a DataFrame
-    sales_team_stats_df = pd.DataFrame(sales_team_stats)
-
-    return sales_team_stats_df
 
 ### - Overview pages
 def channel_comparison(merged_data):
@@ -193,10 +224,18 @@ def channel_comparison(merged_data):
             - 'wholesale_top_collections': Top 10 collections for Wholesale
             - 'faire_top_collections': Top 10 collections for Faire
     """
+    
+
     # Filter data by Sales Team
     ecom_data = merged_data[merged_data["Sales Team"] == "Shopify"]
     wholesale_data = merged_data[merged_data["Sales Team"] == "Wholesale"]
-    faire_data = merged_data[merged_data["Sales Team"] == "Faire"]
+
+    # Faire is herry- Rigged a bit
+    faire_orders = pd.read_csv('./data/f-sales-orders.csv')
+    faire_orders = faire_orders.rename(columns=lambda x: x.strip())  # Strip whitespace from columns
+    faire_order_references = faire_orders["Order Reference"].unique()  # List of relevant order references
+    faire_data = merged_data[merged_data["Order Reference"].isin(faire_order_references)]
+    
 
     # Top 10 parent SKUs for each channel
     ecom_top_10 = (
@@ -285,14 +324,14 @@ def process_root_data():
         # 4. Generate channel comparison DataFrames
         channel_comparison_data = channel_comparison(merged_data)
 
-        channel_stats = compute_sales_team_statistics(merged_data)
+        channel_stats_weeks = compute_sales_team_revenue_by_week(merged_data)
 
         # 5. Return a dictionary containing the statistics, merged data, and channel comparison data
         return {
             "stats": stats,
             "merged_data": merged_data,
             "channel_comparison": channel_comparison_data,
-            "channel_stats": channel_stats,
+            "channel_stats_weeks": channel_stats_weeks,
         }
 
     except Exception as e:

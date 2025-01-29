@@ -14,7 +14,7 @@ layout = dmc.AppShell(
 
                     # Last updated text aligned to the right
                     dmc.Text(
-                        "Last Updated: 2025-01-27 @ 8:10AM PST",  # Example last updated date
+                        "Last Updated: 2025-01-29 @ 8:10AM PST",  # Example last updated date
                         id="last-update",
                         size="sm",
                         style={"color": "black", "marginRight": "25px"},
